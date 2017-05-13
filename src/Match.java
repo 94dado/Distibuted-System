@@ -77,4 +77,16 @@ public class Match {
         }
         return player!= null && players.remove(player);
     }
+
+    public String toReadableString(){
+        StringBuilder s;
+        s = new StringBuilder("Nome match: " + name + "\n");
+        s.append("Dimensione griglia: ").append(dimension).append("\n");
+        s.append("Punti necessari alla vittoria: ").append(pointLimit).append("\n");
+        s.append("Giocatori connessi:\n");
+        for(Player p :players){
+            s.append("- ").append(p.getName()).append("\n");
+        }
+        return s.toString();
+    }
 }

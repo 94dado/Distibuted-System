@@ -30,9 +30,9 @@ public class ServerThread {
     //add a new match in the list of all matches
     @Path("addMatch")
     @POST
-    @Consumes(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response addNewMatch (String jsonMatch){
+    public Response addNewMatch (@DefaultValue("{}") @FormParam(value = "match") String jsonMatch){
         Match newMatch = gson.fromJson(jsonMatch,Match.class);
         return Response.status(200).entity(gson.toJson(GameServerManager.getInstance().addMatch(newMatch))).build();
     }

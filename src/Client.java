@@ -1,3 +1,6 @@
+import com.google.gson.Gson;
+
+import javax.ws.rs.core.MediaType;
 import java.net.InetAddress;
 import java.util.Scanner;
 
@@ -5,6 +8,8 @@ import java.util.Scanner;
 public class Client {
     static private Scanner s;
     static private Player me;
+    private static final String url = "http://localhost:8080/gameServer/";
+    private static Gson gson = new Gson();
 
     public static void main(String[] args){
         s = new Scanner(System.in);
@@ -49,10 +54,23 @@ public class Client {
 
     private static boolean doChoice(String input){
         String matchName;
+        Match match;
         switch (input.toUpperCase()){
             case "L":
                 //stampa lista match
-                //TODO richiedere lista al server
+                try {
+                    HTTPRequestCreator req = new HTTPRequestCreator("GET", MediaType.APPLICATION_FORM_URLENCODED,url + "getMatches");
+                    String answer = req.getAnswer();
+
+                    String[] listOfMatch = gson.fromJson(answer,String[].class);
+                    for(int i = 0; i < listOfMatch.length; i++){
+                        System.out.println(i+ ": "+listOfMatch[i]);
+                    }
+                }catch (Exception e){
+                    System.err.println("Errore di connesione. Chiudo ...");
+                    e.printStackTrace();
+                    return false;
+                }
                 break;
             case "N":
                 //recupero nome match
@@ -62,13 +80,29 @@ public class Client {
                 int dim = getInt("Inserire dimensione griglia:");
                 //recupero punteggio per vittoria
                 int point = getInt("Inserire punteggio per la vittoria:");
-                Match match = new Match(matchName,dim,point,me);
+                match = new Match(matchName,dim,point,me);
                 //TODO send match to server
                 break;
             case "C":
-                System.out.println("Inserire nome match in cui si vuole entrare:");
+                System.out.println("Inserire nome del match in cui si vuole entrare:");
                 matchName = s.nextLine();
-                //TODO send request to server
+                try{
+                    HTTPRequestCreator req = new HTTPRequestCreator("GET", MediaType.APPLICATION_FORM_URLENCODED,url + "getMatchDetail?name="+matchName);
+                    String answer = req.getAnswer();
+                    match = gson.fromJson(answer,Match.class);
+                    System.out.println(match.toReadableString());
+                    System.out.println("Sicuro di voler entrare? (y/n)");
+                    answer = s.nextLine().toLowerCase();
+                    if(answer.equals("y")){
+                        //TODO connect to the match
+                    }else{
+                        break;
+                    }
+                }catch (Exception e){
+                    System.err.println("Match non trovato");
+//                    e.printStackTrace();
+                    break;
+                }
                 break;
             case "E":
                 System.out.println("Chiusura in corso ...");
