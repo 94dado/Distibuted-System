@@ -26,7 +26,7 @@ public class HTTPRequestCreator {
         connection.setRequestProperty(CONTENT_TYPE,content_type);
     }
 
-    public void PutParams(Map<String,String> params) throws Exception{
+    public void putParams(Map<String,String> params) throws Exception{
         String params_string = getQueryFromMap(params);
         connection.setDoOutput(true);
         DataOutputStream stream = new DataOutputStream(connection.getOutputStream());

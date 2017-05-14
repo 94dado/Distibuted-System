@@ -2,6 +2,8 @@ import com.google.gson.Gson;
 
 import javax.ws.rs.core.MediaType;
 import java.net.InetAddress;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Scanner;
 
 
@@ -77,11 +79,31 @@ public class Client {
                 System.out.println("Inserire nome match da creare:");
                 matchName = s.nextLine();
                 //recupero dimensione griglia
-                int dim = getInt("Inserire dimensione griglia:");
+                int dim;
+                while ((dim = getInt("Inserire dimensione griglia: (numero pari)")) %2 != 0);
                 //recupero punteggio per vittoria
                 int point = getInt("Inserire punteggio per la vittoria:");
                 match = new Match(matchName,dim,point,me);
-                //TODO send match to server
+                try{
+                    HTTPRequestCreator req = new HTTPRequestCreator("POST", MediaType.APPLICATION_FORM_URLENCODED,url + "addMatch");
+                    String json = gson.toJson(match);
+                    HashMap<String,String> params = new HashMap<>();
+                    params.put("match",json);
+                    req.putParams(params);
+
+                    String answer = req.getAnswer();
+                    boolean response = gson.fromJson(answer,boolean.class);
+                    if(response){
+                        System.out.println("Partita creata con successo");
+                        //TODO implementare ingresso in modalita' match
+                    }else{
+                        System.out.println("Errore nella creazione della partita. Cambiare nome e riprovare");;
+                    }
+
+                }catch (Exception e){
+                    System.err.println("Errore di connessione.");
+                    e.printStackTrace();
+                }
                 break;
             case "C":
                 System.out.println("Inserire nome del match in cui si vuole entrare:");
@@ -94,7 +116,16 @@ public class Client {
                     System.out.println("Sicuro di voler entrare? (y/n)");
                     answer = s.nextLine().toLowerCase();
                     if(answer.equals("y")){
-                        //TODO connect to the match
+                        req = new HTTPRequestCreator("PUT", MediaType.APPLICATION_FORM_URLENCODED,url + "addPlayerToMatch");
+                        String json = gson.toJson(me);
+                        HashMap<String,String> params = new HashMap<>();
+                        params.put("player",json);
+                        params.put("match",matchName);
+                        req.putParams(params);
+
+                        answer = req.getAnswer();
+                        Match response = gson.fromJson(answer,Match.class);
+                        //TODO implement the entering in the match
                     }else{
                         break;
                     }
