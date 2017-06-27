@@ -2,26 +2,42 @@ import com.google.gson.Gson;
 
 import javax.ws.rs.core.MediaType;
 import java.net.InetAddress;
+import java.net.ServerSocket;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Scanner;
 
 
 public class Client {
     static private Scanner s;
     static private Player me;
-    private static final String url = "http://localhost:8080/gameServer/";
+    private static String url = "http://localhost:8080/gameServer/";
     private static Gson gson = new Gson();
+    private static ServerSocket serverSocket;
 
     public static void main(String[] args){
         s = new Scanner(System.in);
+        String ip;
+        int port;
         System.out.println("Progetto Sistemi Distribuiti 2016/2017 - Davide Quadrelli\n");
+        //todo decommentare a progetto finito le prossime righe
+//        System.out.println("Inserisci indirizzo del server:");
+//        String serverAddress = s.nextLine();
+//        port = getInt("Inserisci porta del server:");
+//        url = "http://"+serverAddress+":"+port+"/gameServer/";
         System.out.println("Inserisci nome utente:");
         String name = s.nextLine();
-        String ip = getIpAddress();
-        String port = /*args[0];*/ "9999";
-        me = new Player(name,ip,port);
-        startApplication();
+        //avvio server per le comunicazioni fra client
+        try{
+            ip = getIpAddress();
+            serverSocket = new ServerSocket(0);
+            port = serverSocket.getLocalPort();
+            me = new Player(name,ip,port);
+            startApplication();
+        }catch (Exception e){
+            System.err.println("Errore nell'apertura della socket di ascolto del client!");
+            System.err.println("--------------------------------------------------------");
+            e.printStackTrace();
+        }
     }
 
     private static void startApplication(){
@@ -65,11 +81,13 @@ public class Client {
                     String answer = req.getAnswer();
 
                     String[] listOfMatch = gson.fromJson(answer,String[].class);
+                    if(listOfMatch.length == 0) System.out.println("Nessun match disponibile, è possibile crearne uno nuovo.\n");
                     for(int i = 0; i < listOfMatch.length; i++){
                         System.out.println(i+ ": "+listOfMatch[i]);
                     }
                 }catch (Exception e){
                     System.err.println("Errore di connesione. Chiudo ...");
+                    System.err.println("--------------------------------");
                     e.printStackTrace();
                     return false;
                 }
@@ -84,6 +102,7 @@ public class Client {
                 //recupero punteggio per vittoria
                 int point = getInt("Inserire punteggio per la vittoria:");
                 match = new Match(matchName,dim,point,me);
+                //invio al server il nuovo match
                 try{
                     HTTPRequestCreator req = new HTTPRequestCreator("POST", MediaType.APPLICATION_FORM_URLENCODED,url + "addMatch");
                     String json = gson.toJson(match);
@@ -94,12 +113,17 @@ public class Client {
                     String answer = req.getAnswer();
                     boolean response = gson.fromJson(answer,boolean.class);
                     if(response){
+                        //match creato
                         System.out.println("Partita creata con successo");
-                        //TODO implementare ingresso in modalita' match
+                        //avvio match
+                        GameplayManager manager = new GameplayManager(serverSocket, match, me);
+                        manager.startTheMatch();
+                        return false;
                     }else{
-                        System.out.println("Errore nella creazione della partita. Cambiare nome e riprovare");;
+                        //match non creato
+                        System.out.println("Errore nella creazione della partita. Cambiare nome e riprovare");
+                        System.err.println("---------------------------------------------------------------");
                     }
-
                 }catch (Exception e){
                     System.err.println("Errore di connessione.");
                     e.printStackTrace();
@@ -108,6 +132,7 @@ public class Client {
             case "C":
                 System.out.println("Inserire nome del match in cui si vuole entrare:");
                 matchName = s.nextLine();
+                //provo a connettermi alla partita
                 try{
                     HTTPRequestCreator req = new HTTPRequestCreator("GET", MediaType.APPLICATION_FORM_URLENCODED,url + "getMatchDetail?name="+matchName);
                     String answer = req.getAnswer();
@@ -125,16 +150,19 @@ public class Client {
 
                         answer = req.getAnswer();
                         Match response = gson.fromJson(answer,Match.class);
-                        //TODO implement the entering in the match
+                        //avvio match
+                        GameplayManager manager = new GameplayManager(serverSocket, response, me);
+                        manager.startTheMatch();
+                        return false;
                     }else{
                         break;
                     }
-                }catch (Exception e){
+                }catch (Exception e) {
                     System.err.println("Match non trovato");
-//                    e.printStackTrace();
+                    System.err.println("-----------------");
+                    e.printStackTrace();
                     break;
                 }
-                break;
             case "E":
                 System.out.println("Chiusura in corso ...");
                 return false;
