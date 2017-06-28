@@ -1,93 +1,134 @@
+import com.google.gson.Gson;
+
 import java.net.ServerSocket;
+import java.util.ArrayList;
 
 public class GameplayManager {
+    //singleton
+    private static GameplayManager istance;
+
     //info of game
     private ServerSocket serverSocket;
     private Match match;
     private Player me;
+    private Gson gson;
     private PlayerCoordinate myPosition;
     private boolean isMatchFinished;
-    private boolean founder;
+    private Message messageToSend;
 
-    public boolean haveToken = false;
-    public String message;
 
-    //objects for locks
-    public final Lock tokenLock = new Lock();
-    public final Lock startLock = new Lock();
     //threads
-
-    public ClientListenerThread listenerThread;
+    private ClientListenerThread listenerThread;
 
     //messages
-    public static final String tokenMessage = "token";
-    public static final String newPlayerMessage = "newPlayer";
+    static final String tokenMessage = "token";
+    static final String newPlayerMessage = "newPlayer";
 
-    public GameplayManager(ServerSocket serverSocket, Match match, Player me) {
+    private GameplayManager(ServerSocket serverSocket, Match match, Player me) {
         this.serverSocket = serverSocket;
         this.match = match;
         this.me = me;
-        founder = me.equals(match.getPlayers().get(0));
+        gson = new Gson();
     }
 
-    public synchronized boolean isMatchFinished() {
+    synchronized boolean isMatchFinished(){
         return isMatchFinished;
     }
 
-    public synchronized void isMatchFinished(boolean value){
-        isMatchFinished = value;
+    static synchronized GameplayManager getIstance() {
+        return istance;
     }
 
-    public ServerSocket getServerSocket() {
+    synchronized ServerSocket getServerSocket() {
         return serverSocket;
     }
 
-    public Match getMatch() {
-        return match;
+    static synchronized void setIstance(ServerSocket serverSocket, Match match, Player me) {
+        GameplayManager.istance = new GameplayManager(serverSocket, match, me);
     }
 
-    public Player getMe() {
-        return me;
-    }
-
-    public boolean isFounder() {
-        return founder;
-    }
-
-    private void waitForThread(){
-        synchronized (startLock){
-            try{
-                startLock.wait();
-            }catch (Exception e){
-                System.err.println("Errore nei monitor. Uccidetemi");
-                System.err.println("------------------------------");
-                e.printStackTrace();
+    //restituisce il prossimo player nella lista
+    private Player nextPlayer(){
+        int position = 0;
+        ArrayList<Player> players = match.getPlayers();
+        for (int i = 0; i< players.size(); i++){
+            if(players.get(i).equals(me)){
+                position = i;
+                break;
             }
         }
+        //prendo posizione successiva
+        position = (position + 1) % players.size();
+        return players.get(position);
     }
 
-    //metodo che si occupa di avviare localmente la partita
-    public synchronized void startTheMatch(){
+    //metodo che si occupa di entrare in una partita gia' creata
+    synchronized void enterTheMatch(){
+        startTheMatch();
+        //comunico agli altri player il mio ingresso in partita
+        String meJson = gson.toJson(me);
+        Message m = new Message(MessageType.ADD_PLAYER,meJson);
+        //invio messaggio agli altri
+        PeerRequestSender.sendRequestToAll(match.getPlayers(),me,gson.toJson(m));
+        //TODO aggiungere altra roba forse?
+    }
+
+    //metodo che avvia una nuova partita
+    synchronized void startTheMatch(){
         //avvio thread per ascoltare i messaggi in entrata e attendo che sia pronto
-        listenerThread = new ClientListenerThread(this);
+        listenerThread = new ClientListenerThread();
         listenerThread.start();
-        waitForThread();
+        //TODO aggiungere altra roba forse?
+    }
 
-        //se ho creato la partita, inizializzo il token
-        if(founder){
-            haveToken = true;
-            TokenRingThread thread = new TokenRingThread(this);
-            thread.start();
+    //metodo che aggiunge un nuovo player in partita
+    public synchronized void addNewPlayer(Player newPlayer){
+        match.getPlayers().add(newPlayer);
+        if(match.getPlayers().size() == 2){
+            //posso avviare la partita ora!
+            tokenReceived();
         }
-        else{
-            //se non ho creato io la partita, comunico agli altri il mio ingresso
-            synchronized (match.getPlayers()){  //mi sincronizzo sulla lista dei player
-                message = newPlayerMessage + " " + me.toSendableString();
-                PeerRequestSender.sendRequestToAll(this);
-                System.out.println("Inviato richiesta!!");
+    }
+
+    //metodo che rimuove un player in partita
+    public synchronized void removePlayer(Player oldPlayer){
+        ArrayList<Player> players = match.getPlayers();
+        int pos = -1;
+        for(int i = 0; i < players.size(); i++){
+            if(players.get(i).equals(oldPlayer)){
+                //trovato
+                pos = i;
+                break;
             }
         }
+        if(pos > -1) players.remove(pos);
+    }
 
-        //TODO iniziare il vero e proprio match
+
+    //metodo che si occupa di far girare il token
+    public synchronized void tokenReceived() {
+        System.out.println("I GOT THE POWER!");
+        //todo tempo code
+        try{Thread.sleep(3000);}catch (Exception e){
+            System.err.println("la vita fa schifo");
+        }
+        if(messageToSend != null){
+            //ho una mossa da mandare agli altri
+            if(messageToSend.getType() == MessageType.BOMB){
+                //todo chiamare metodo per inviare bomba
+            }else{
+                //todo chiamare metodo per inviare movimento
+            }
+        }
+        //ora mando al prossimo il token, se esiste un prossimo
+        if(match.getPlayers().size() > 1){
+            //c'e' qualcun'altro. Lo trovo
+            Player next = nextPlayer();
+            //creo il messaggio col token
+            Message tokenMessage = new Message(MessageType.TOKEN,null);
+            //e glielo mando
+            PeerRequestSender.sendRequest(gson.toJson(tokenMessage),next);
+
+        }
     }
 }

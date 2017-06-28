@@ -1,32 +1,11 @@
-
-//classe per l'invio di richieste agli altri client
-
 import java.io.DataOutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
 
-class Sender extends Thread{
-    private GameplayManager manager;
-    private String message;
-    private Player destination;
-
-    public Sender(GameplayManager manager, Player destination) {
-        this.manager = manager;
-        this.message = manager.message;
-        this.destination = destination;
-    }
-
-    @Override
-    public void run() {
-        PeerRequestSender.sendRequest(manager,message,destination);
-    }
-}
-
-
 public class PeerRequestSender {
 
     //metodo per inviare una richiesta singola
-    public static void sendRequest(GameplayManager manager, String message, Player destination){
+    public static void sendRequest(String message, Player destination){
         try{
             //create socket and streamer
             Socket socket = new Socket(destination.getAddress(), destination.getPort());
@@ -44,17 +23,19 @@ public class PeerRequestSender {
     }
 
     //invia piu' messaggi in parallelo
-    public static void sendRequestToAll(GameplayManager manager) {
-        ArrayList<Player> players = manager.getMatch().getPlayers();
+    public static void sendRequestToAll(ArrayList<Player> players, Player me, String message) {
         ArrayList<Sender> threads = new ArrayList<>();
+        //invio il messaggio a tutti
         for (Player destination : players) {
-            //invio a tutti tranne che a me stesso
-            if(!destination.equals(manager.getMe())){
-                Sender send = new Sender(manager,destination);
+            //tranne che a me stesso
+            if(!destination.equals(me)) {
+                //avvio thread che mandera' messaggio
+                Sender send = new Sender(destination,message);
                 threads.add(send);
                 send.start();
             }
         }
+        //attendo che ogni thread abbia finito
         for(Sender send: threads){
             try{
                 send.join();
@@ -64,5 +45,20 @@ public class PeerRequestSender {
                 e.printStackTrace();
             }
         }
+    }
+}
+
+class Sender extends Thread{
+    private Player destination;
+    private String message;
+
+    public Sender(Player destination, String message) {
+        this.destination = destination;
+        this.message = message;
+    }
+
+    @Override
+    public void run() {
+        PeerRequestSender.sendRequest(message,destination);
     }
 }

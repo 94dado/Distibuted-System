@@ -57,6 +57,8 @@ public class GameServerManager {
                 //cancello match perché senza giocatori
                 matches.remove(selectedMatch);
             }
+            //avviso altri player del giocatore uscito
+            //TODO AVVISARE GLI ALTRI!!!
         }
         return ok;
     }
