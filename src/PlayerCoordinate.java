@@ -24,4 +24,13 @@ public class PlayerCoordinate{
     public void setY(int y) {
         this.y = y;
     }
+
+    public boolean equals(PlayerCoordinate obj) {
+        return x == obj.getX() && y == obj.getY();
+    }
+
+    @Override
+    public String toString() {
+        return "("+x+","+y+")";
+    }
 }

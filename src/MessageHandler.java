@@ -1,6 +1,7 @@
 import com.google.gson.Gson;
 
 import java.io.BufferedReader;
+import java.io.DataOutputStream;
 import java.io.InputStreamReader;
 import java.net.Socket;
 
@@ -28,6 +29,13 @@ public class MessageHandler extends Thread{
                     Player player = gson.fromJson(message.getJsonMessage(),Player.class);
                     GameplayManager.getIstance().addNewPlayer(player);
                     break;
+                case CHECK_SPAWN:   //richiesto check delle coordinate per lo spawn
+                    PlayerCoordinate coordinate = gson.fromJson(message.getJsonMessage(), PlayerCoordinate.class);
+                    boolean result = GameplayManager.getIstance().checkSpawnCoordinate(coordinate);
+                    DataOutputStream outToServer = new DataOutputStream(socket.getOutputStream());
+                    outToServer.writeBytes(gson.toJson(result)+"\n");
+                    outToServer.flush();
+                    outToServer.close();
             }
         }catch (Exception e){
             System.err.println("Errore nell'elaborazione del messaggio ricevuto");

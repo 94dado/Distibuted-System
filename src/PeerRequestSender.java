@@ -1,6 +1,11 @@
+import com.google.gson.Gson;
+
+import java.io.BufferedReader;
 import java.io.DataOutputStream;
+import java.io.InputStreamReader;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Random;
 
 public class PeerRequestSender {
 
@@ -45,6 +50,48 @@ public class PeerRequestSender {
                 e.printStackTrace();
             }
         }
+    }
+
+    public static PlayerCoordinate spawnPlayer(ArrayList<Player> players, Player me, int dimension){
+        boolean spawned = true;
+        Gson gson = new Gson();
+        PlayerCoordinate coordinate;
+        //finche' non riesco a spawnare
+        do{
+            //creo coordinate e le metto in un messaggio
+            coordinate = spawnCoordinate(dimension);
+            Message toSend = new Message(MessageType.CHECK_SPAWN,gson.toJson(coordinate));
+            for (Player destination : players) {
+                if (!destination.equals(me)) {
+                    try {
+                        Socket socket = new Socket(destination.getAddress(), destination.getPort());
+                        DataOutputStream outToServer = new DataOutputStream(socket.getOutputStream());
+                        //send data
+                        outToServer.writeBytes(gson.toJson(toSend) + "\n");
+                        outToServer.flush();
+                        //attendo risposta
+                        BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                        //valuto risposta
+                        String answer = reader.readLine();
+                        spawned = gson.fromJson(answer, boolean.class);
+                        //close socket
+                        outToServer.close();
+                        if (!spawned) break;
+                    } catch (Exception e) {
+                        System.err.println("Errore nel tentativo di comunicare coi peer per spawnare");
+                        System.err.println("--------------------------------------------------------");
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }while(!spawned);
+        return coordinate;
+    }
+
+    //create random player coordinates
+    private static PlayerCoordinate spawnCoordinate(int dimension){
+        Random generator = new Random();
+        return new PlayerCoordinate(generator.nextInt(dimension),generator.nextInt(dimension));
     }
 }
 

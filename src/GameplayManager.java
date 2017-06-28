@@ -2,6 +2,7 @@ import com.google.gson.Gson;
 
 import java.net.ServerSocket;
 import java.util.ArrayList;
+import java.util.Random;
 
 public class GameplayManager {
     //singleton
@@ -64,12 +65,16 @@ public class GameplayManager {
 
     //metodo che si occupa di entrare in una partita gia' creata
     synchronized void enterTheMatch(){
-        startTheMatch();
+        //avvio thread per ascoltare i messaggi in entrata e attendo che sia pronto
+        listenerThread = new ClientListenerThread();
+        listenerThread.start();
         //comunico agli altri player il mio ingresso in partita
         String meJson = gson.toJson(me);
         Message m = new Message(MessageType.ADD_PLAYER,meJson);
-        //invio messaggio agli altri
         PeerRequestSender.sendRequestToAll(match.getPlayers(),me,gson.toJson(m));
+        //cerco di far spawnare il player
+        myPosition = PeerRequestSender.spawnPlayer(match.getPlayers(),me,match.getDimension());
+        System.out.println("Sono spawnato in "+myPosition);
         //TODO aggiungere altra roba forse?
     }
 
@@ -78,6 +83,9 @@ public class GameplayManager {
         //avvio thread per ascoltare i messaggi in entrata e attendo che sia pronto
         listenerThread = new ClientListenerThread();
         listenerThread.start();
+        //spawno il player
+        myPosition = PeerRequestSender.spawnPlayer(match.getPlayers(),me,match.getDimension());
+        System.out.println("Sono spawnato in "+myPosition);
         //TODO aggiungere altra roba forse?
     }
 
@@ -108,7 +116,7 @@ public class GameplayManager {
     //metodo che si occupa di far girare il token
     public synchronized void tokenReceived() {
         System.out.println("I GOT THE POWER!");
-        //todo tempo code
+        //todo temp code
         try{Thread.sleep(3000);}catch (Exception e){
             System.err.println("la vita fa schifo");
         }
@@ -130,5 +138,10 @@ public class GameplayManager {
             PeerRequestSender.sendRequest(gson.toJson(tokenMessage),next);
 
         }
+    }
+
+    //metodo che controlla se le coordinate ricevute sono disponibili per uno spawn
+    public synchronized boolean checkSpawnCoordinate(PlayerCoordinate coordinate) {
+        return !myPosition.equals(coordinate);
     }
 }
