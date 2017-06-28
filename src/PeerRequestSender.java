@@ -56,10 +56,12 @@ public class PeerRequestSender {
         boolean spawned = true;
         Gson gson = new Gson();
         PlayerCoordinate coordinate;
+        ArrayList<PlayerCoordinate> oldAttempts = new ArrayList<>();
         //finche' non riesco a spawnare
         do{
             //creo coordinate e le metto in un messaggio
-            coordinate = spawnCoordinate(dimension);
+            coordinate = spawnCoordinate(dimension, oldAttempts);
+            oldAttempts.add(coordinate);
             Message toSend = new Message(MessageType.CHECK_SPAWN,gson.toJson(coordinate));
             for (Player destination : players) {
                 if (!destination.equals(me)) {
@@ -89,9 +91,11 @@ public class PeerRequestSender {
     }
 
     //create random player coordinates
-    private static PlayerCoordinate spawnCoordinate(int dimension){
+    private static PlayerCoordinate spawnCoordinate(int dimension, ArrayList<PlayerCoordinate> old){
         Random generator = new Random();
-        return new PlayerCoordinate(generator.nextInt(dimension),generator.nextInt(dimension));
+        PlayerCoordinate actual = new PlayerCoordinate(generator.nextInt(dimension),generator.nextInt(dimension));
+        while(old.contains(actual)) actual = new PlayerCoordinate(generator.nextInt(dimension),generator.nextInt(dimension));
+        return actual;
     }
 }
 
