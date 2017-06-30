@@ -78,6 +78,7 @@ public class Match {
         return player!= null && players.remove(player);
     }
 
+    //crea stringa da stampare con tutti i dati della partita
     public String toReadableString(){
         StringBuilder s;
         s = new StringBuilder("Nome match: " + name + "\n");
@@ -88,5 +89,25 @@ public class Match {
             s.append("- ").append(p.getName()).append("\n");
         }
         return s.toString();
+    }
+
+    public GridColors getColorOfPosition(PlayerCoordinate coord){
+        if(coord.getX() < dimension /2){
+            if(coord.getY() < dimension / 2){
+                //alto sx
+                return GridColors.GREEN;
+            }else{
+                //basso sx
+                return GridColors.BLUE;
+            }
+        }else{
+            if(coord.getY() < dimension / 2){
+                //alto dx
+                return GridColors.RED;
+            }else{
+                //basso dx
+                return GridColors.YELLOW;
+            }
+        }
     }
 }

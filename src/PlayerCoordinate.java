@@ -29,6 +29,10 @@ public class PlayerCoordinate{
         return x == obj.getX() && y == obj.getY();
     }
 
+    public boolean isValidCoordinate(int sizeLimit){
+        return x > 0 && y > 0 && x < sizeLimit && y < sizeLimit;
+    }
+
     @Override
     public String toString() {
         return "("+x+","+y+")";
