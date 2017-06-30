@@ -52,8 +52,8 @@ public class ClientInOutThread extends Thread{
                     printChoices();
                 }
                 break;
-            case "B":   //devo lanciare bomba
-                //todo lanciare bomba
+            case "B":   //devo creare messaggio per bomba
+                //todo creare messaggio della bomba
                 break;
             default:
                 System.out.println("Input non valido\n");

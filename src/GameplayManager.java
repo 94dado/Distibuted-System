@@ -1,5 +1,6 @@
 import com.google.gson.Gson;
 
+import javax.ws.rs.core.MediaType;
 import java.net.ServerSocket;
 import java.util.ArrayList;
 import java.util.Random;
@@ -9,6 +10,7 @@ public class GameplayManager {
     private static GameplayManager istance;
 
     //informazioni sulla partita
+    private String url;                                                     //url del server
     private ServerSocket serverSocket;                                      //socket su cui ricevo richieste
     private Match match;                                                    //informazioni sul match attuale
     private Player me;                                                      //informazioni sul mio giocatore
@@ -17,28 +19,26 @@ public class GameplayManager {
     private ArrayList<GridColors> bombList = new ArrayList<>();             //lista delle bombe
     private boolean isMatchFinished;                                        //booleano che indica se la partita è finita per me
     private Message messageToSend;                                          //messaggio da inviare al ricevimento del token
+    private int points;                                                     //punteggio del player
 
 
     //threads
     private ClientListenerThread listenerThread;
     private ClientInOutThread inOutThread;
 
-    //messages
-    static final String tokenMessage = "token";
-    static final String newPlayerMessage = "newPlayer";
-
-    private GameplayManager(ServerSocket serverSocket, Match match, Player me) {
+    private GameplayManager(ServerSocket serverSocket, Match match, Player me, String url) {
         this.serverSocket = serverSocket;
         this.match = match;
         this.me = me;
+        this.url = url;
     }
 
     synchronized boolean isMatchFinished(){
         return isMatchFinished;
     }
 
-    static synchronized void setIstance(ServerSocket serverSocket, Match match, Player me) {
-        GameplayManager.istance = new GameplayManager(serverSocket, match, me);
+    static synchronized void setIstance(ServerSocket serverSocket, Match match, Player me, String url) {
+        GameplayManager.istance = new GameplayManager(serverSocket, match, me, url);
     }
 
     static synchronized GameplayManager getIstance() {
@@ -144,9 +144,20 @@ public class GameplayManager {
             if(messageToSend.getType() == MessageType.BOMB){
                 //todo chiamare metodo per inviare bomba
             }else{
-                //todo chiamare metodo per inviare movimento
-
+                boolean killed = PeerRequestSender.sendMove(match.getPlayers(),me,gson.toJson(messageToSend));
+                if(killed) {
+                    //ho fatto un punto
+                    points++;
+                    //controllo se la partita e' finita
+                    if(points == match.getPointLimit()){
+                        //ho vinto
+                        //TODO concludere la partita
+                    }
+                }
             }
+            messageToSend = null;
+            //sveglio il thread dell'input
+            inOutThread.notify();
         }
         //ora mando al prossimo il token, se esiste un prossimo
         if(match.getPlayers().size() > 1){
@@ -212,5 +223,42 @@ public class GameplayManager {
     //restituisce il colore della griglia della posizione attuale
     public GridColors getActualGridColor() {
         return match.getColorOfPosition(myPosition);
+    }
+
+    //metodo per controllare se sono morto per via di una movimento avversario
+    public boolean checkDie(PlayerCoordinate coordinate) {
+        if(myPosition.equals(coordinate)){
+            //sono morto
+            Die();
+            return true;
+        }else{
+            //sono ancora vivo
+            return false;
+
+        }
+    }
+
+    //metodo che esegue la morte
+    public void Die(){
+        try {
+            String uri = url + "removePlayerFromMatch/" + match.getName() +"/"+me.getName();
+            HTTPRequestCreator req = new HTTPRequestCreator("DELETE", MediaType.APPLICATION_JSON, uri);
+            String answer = req.getAnswer();
+            if(!gson.fromJson(answer,boolean.class)){
+                throw new Exception("il server non mi ha rimosso dalla lista dei player del match");
+            }
+        }catch (Exception e){
+            System.err.println("Errore nel tentativo di comunicare la mia morte al server");
+            System.err.println("---------------------------------------------------------");
+            e.printStackTrace();
+        }
+    }
+
+    //metodo che invia un ultima richiesta di "morte" a me stesso, per esser sicuro prima di
+    //elaborare ogni messaggio che ho ricevuto nel frattempo
+    public synchronized void sendDieMessage() {
+        //invio richiesta a me stesso per esser sicuro di andare a terminare il server
+        String message = gson.toJson(new Message(MessageType.DIE,null));
+        PeerRequestSender.sendRequest(message,me);
     }
 }

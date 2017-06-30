@@ -1,3 +1,9 @@
+import com.google.gson.Gson;
+
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.InputStreamReader;
+import java.net.Socket;
 import java.util.ArrayList;
 
 
@@ -51,14 +57,17 @@ public class GameServerManager {
                 break;
             }
         }
-        boolean ok = selectedMatch!=null && selectedMatch.removePlayer(playerName);
+        if(selectedMatch==null) return false;
+        Player pl = selectedMatch.getPlayerByName(playerName);
+        if(pl==null) return false;
+        boolean ok = selectedMatch.removePlayer(playerName);
         if(ok){
             if (selectedMatch.getPlayers().size() == 0){
                 //cancello match perché senza giocatori
                 matches.remove(selectedMatch);
             }
             //avviso altri player del giocatore uscito
-            //TODO AVVISARE GLI ALTRI!!!
+            sendAllPlayerDied(selectedMatch, pl);
         }
         return ok;
     }
@@ -72,7 +81,14 @@ public class GameServerManager {
                 break;
             }
         }
-        return selectedMatch != null && matches.remove(selectedMatch);
+        if(selectedMatch!=null){
+            for(Player player: selectedMatch.getPlayers())
+            sendAllPlayerDied(selectedMatch,player);
+            matches.remove(selectedMatch);
+            return true;
+        }else{
+            return false;
+        }
     }
 
     //metodo per restituire i nomi di tutti i match presenti
@@ -94,5 +110,31 @@ public class GameServerManager {
             }
         }
         return match;
+    }
+
+    private synchronized void sendAllPlayerDied(Match selectedMatch, Player pl){
+        ArrayList<Player> players = selectedMatch.getPlayers();
+        Message m = new Message(MessageType.REMOVE_PLAYER, new Gson().toJson(pl));
+        String message = new Gson().toJson(m);
+        for(Player player: players){
+            sendMessage(player,message);
+        }
+    }
+
+    private synchronized void sendMessage(Player player, String message) {
+        try{
+            Socket s = new Socket(player.getAddress(),player.getPort());
+            DataOutputStream outToServer = new DataOutputStream(s.getOutputStream());
+            //invio dati
+            outToServer.writeBytes(message + "\n");
+            outToServer.flush();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(s.getInputStream()));
+            //valuto risposta
+            String answer = reader.readLine();
+            //me ne frego della risposta, mi basta che ci sia
+        }catch (Exception e){
+            System.err.println("Come lo gestisco questo errore?");
+            e.printStackTrace();
+        }
     }
 }

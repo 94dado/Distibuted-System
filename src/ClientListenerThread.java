@@ -15,6 +15,8 @@ public class ClientListenerThread extends Thread{
                 MessageHandler handler = new MessageHandler(sock);
                 handler.start();
             }
+            //partita finita. chiudo la socket
+            serverSocket.close();
         }catch (Exception e){
             System.err.println("Errore nel listener del client");
             System.err.println("------------------------------");

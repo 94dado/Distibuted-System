@@ -66,6 +66,17 @@ public class Match {
         return pointLimit;
     }
 
+    public Player getPlayerByName(String playerName){
+        Player player = null;
+        for(Player pl:players){
+            if(pl.getName().equals(playerName)){
+                player = pl;
+                break;
+            }
+        }
+        return player;
+    }
+
     //metodo per rimuovere un player dalla partita
     public boolean removePlayer(String playerName) {
         Player player = null;

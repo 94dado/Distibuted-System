@@ -116,7 +116,7 @@ public class Client {
                         //match creato
                         System.out.println("Partita creata con successo");
                         //avvio match
-                        GameplayManager.setIstance(serverSocket, match, me);
+                        GameplayManager.setIstance(serverSocket, match, me, url);
                         GameplayManager.getIstance().startTheMatch();
                         return false;
                     }else{
@@ -151,7 +151,7 @@ public class Client {
                         answer = req.getAnswer();
                         Match response = gson.fromJson(answer,Match.class);
                         //mi connetto al match esistente
-                        GameplayManager.setIstance(serverSocket, response, me);
+                        GameplayManager.setIstance(serverSocket, response, me, url);
                         GameplayManager.getIstance().enterTheMatch();
                         return false;
                     }else{
