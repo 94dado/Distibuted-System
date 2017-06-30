@@ -20,6 +20,7 @@ public class GameplayManager {
     private boolean isMatchFinished;                                        //booleano che indica se la partita è finita per me
     private Message messageToSend;                                          //messaggio da inviare al ricevimento del token
     private int points;                                                     //punteggio del player
+    private ArrayList<String> eventBuffer;                                  //buffer degli eventi da stampare e mostrare all'utente
 
 
     //threads
@@ -45,12 +46,20 @@ public class GameplayManager {
         return istance;
     }
 
-    synchronized ServerSocket getServerSocket() {
+    public synchronized ServerSocket getServerSocket() {
         return serverSocket;
     }
 
     public synchronized PlayerCoordinate getMyPosition() {
         return myPosition;
+    }
+
+    public synchronized int getPoints() {
+        return points;
+    }
+
+    public synchronized int getLimitPoints() {
+        return match.getPointLimit();
     }
 
     public synchronized void setMessageToSend(Message messageToSend) {
@@ -59,6 +68,18 @@ public class GameplayManager {
 
     public synchronized boolean messageAvailable(){
         return messageToSend != null;
+    }
+
+    //aggiungo evento all'eventbuffer
+    public synchronized void addEvent(String event){
+        eventBuffer.add(event);
+    }
+
+    public synchronized String[] getAllEvents(){
+        String[] events = new String[eventBuffer.size()];
+        events = eventBuffer.toArray(events);
+        eventBuffer.clear();
+        return events;
     }
 
     //restituisce il prossimo player nella lista

@@ -128,13 +128,15 @@ public class PeerRequestSender {
         //numero di uccisioni eseguite (al massimo diventera' 1)
         int killed = 0;
         //controllo le risposte
-        for(Socket socket : sockets){
+        for(int i = 0; i < sockets.length; i++){
+            Socket socket = sockets[i];
             try{
                 BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 //valuto risposta
                 String answer = reader.readLine();
                 Message m = new Gson().fromJson(answer,Message.class);
-                if(m.getType() == MessageType.KILL_CONFIRMED){
+                if(m.getType() == MessageType.KILL_CONFIRMED){  //hai ucciso il player
+                    GameplayManager.getIstance().addEvent("Hai mangiato " + players.get(i).getName() + "!");
                     killed++;
                     //non essendoci piu' persone sulla stessa coordinata, esco dal ciclo
                     break;

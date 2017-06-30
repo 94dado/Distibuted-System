@@ -45,6 +45,7 @@ public class MessageHandler extends Thread{
                     Message m;
                     if(GameplayManager.getIstance().checkDie(coordinate)){
                         //sono morto
+                        GameplayManager.getIstance().addEvent("Sei stato mangiato. hai perso");
                         m = new Message(MessageType.KILL_CONFIRMED, null);
                     }else{
                         m = new Message(MessageType.ACK, null);
@@ -59,8 +60,11 @@ public class MessageHandler extends Thread{
                     System.exit(0);
                     break;
                 case REMOVE_PLAYER:             //player morto. da togliere dalla lista
-                    Player p = gson.fromJson(message.getJsonMessage(),Player.class);
-                    GameplayManager.getIstance().removePlayer(p);
+                    player = gson.fromJson(message.getJsonMessage(),Player.class);
+                    //salvo avvenimento morte player per la stampa su output
+                    GameplayManager.getIstance().addEvent(player.getName() + " è stato mangiato");
+                    //rimuovo il player dalla lista
+                    GameplayManager.getIstance().removePlayer(player);
                     Message answer = new Message(MessageType.ACK,null);
                     PeerRequestSender.answer(socket,gson.toJson(answer));
             }

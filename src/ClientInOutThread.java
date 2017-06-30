@@ -16,11 +16,17 @@ public class ClientInOutThread extends Thread{
                 try{
                     wait();
                 }catch (Exception e){
-                    System.err.println("Errore nell'attendere che il messaggio venisse inviato");
+                    System.err.println("Errore nella wait dell'input/output");
                     System.err.println("------------------------------------------------------");
                     e.printStackTrace();
                 }
             }
+            //stampo tutti gli eventi avvenuti
+            String[] events = manager.getAllEvents();
+            for(String event:events){
+                System.out.println(event);
+            }
+            System.out.println("Punteggio: " + manager.getPoints() + "/" + manager.getLimitPoints());
             System.out.println("Ti trovi nell'area di colore" + manager.getActualGridColor()+" in posizione " + manager.getMyPosition());
             //se ci sono bombe, avviso l'utente
             if(manager.bombAvailable()) {
