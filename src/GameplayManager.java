@@ -17,10 +17,10 @@ public class GameplayManager {
     private Gson gson = new Gson();
     private PlayerCoordinate myPosition;                                    //coordinate del giocatore
     private ArrayList<GridColors> bombList = new ArrayList<>();             //lista delle bombe
-    private boolean isMatchFinished;                                        //booleano che indica se la partita è finita per me
+    private boolean isMatchFinished = false;                                //booleano che indica se la partita è finita per me
     private Message messageToSend;                                          //messaggio da inviare al ricevimento del token
     private int points;                                                     //punteggio del player
-    private ArrayList<String> eventBuffer;                                  //buffer degli eventi da stampare e mostrare all'utente
+    private ArrayList<String> eventBuffer = new ArrayList<>();              //buffer degli eventi da stampare e mostrare all'utente
 
 
     //threads
@@ -66,6 +66,10 @@ public class GameplayManager {
         this.messageToSend = messageToSend;
     }
 
+    public synchronized void setMyPosition(PlayerCoordinate myPosition) {
+        this.myPosition = myPosition;
+    }
+
     public synchronized boolean messageAvailable(){
         return messageToSend != null;
     }
@@ -83,7 +87,7 @@ public class GameplayManager {
     }
 
     //restituisce il prossimo player nella lista
-    private Player nextPlayer(){
+    private synchronized Player nextPlayer(){
         int position = 0;
         ArrayList<Player> players = match.getPlayers();
         for (int i = 0; i< players.size(); i++){
@@ -155,11 +159,7 @@ public class GameplayManager {
 
     //metodo che si occupa di far girare il token
     public synchronized void tokenReceived() {
-        System.out.println("I GOT THE POWER!");
-        //todo temp code
-        try{Thread.sleep(3000);}catch (Exception e){
-            System.err.println("la vita fa schifo");
-        }
+        //System.out.println("I GOT THE POWER!");
         if(messageToSend != null){
             //ho una mossa da mandare agli altri
             if(messageToSend.getType() == MessageType.BOMB){
@@ -178,7 +178,9 @@ public class GameplayManager {
             }
             messageToSend = null;
             //sveglio il thread dell'input
-            inOutThread.notify();
+            synchronized (inOutThread){
+                inOutThread.notify();
+            }
         }
         //ora mando al prossimo il token, se esiste un prossimo
         if(match.getPlayers().size() > 1){
@@ -242,12 +244,12 @@ public class GameplayManager {
     }
 
     //restituisce il colore della griglia della posizione attuale
-    public GridColors getActualGridColor() {
+    public synchronized GridColors getActualGridColor() {
         return match.getColorOfPosition(myPosition);
     }
 
     //metodo per controllare se sono morto per via di una movimento avversario
-    public boolean checkDie(PlayerCoordinate coordinate) {
+    public synchronized boolean checkDie(PlayerCoordinate coordinate) {
         if(myPosition.equals(coordinate)){
             //sono morto
             Die();
@@ -260,7 +262,7 @@ public class GameplayManager {
     }
 
     //metodo che esegue la morte
-    public void Die(){
+    public synchronized void Die(){
         try {
             String uri = url + "removePlayerFromMatch/" + match.getName() +"/"+me.getName();
             HTTPRequestCreator req = new HTTPRequestCreator("DELETE", MediaType.APPLICATION_JSON, uri);

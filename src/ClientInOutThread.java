@@ -8,16 +8,18 @@ public class ClientInOutThread extends Thread{
     Gson gson = new Gson();
 
     @Override
-    public void run() {
+    public synchronized void run() {
         System.out.println("Partita iniziata\n");
         while(!manager.isMatchFinished()){
             if(manager.messageAvailable()){
                 //attendo che il messaggio venga inviato
                 try{
+                    System.out.println("attendo che il messaggio venga inviato");
                     wait();
+                    System.out.println("Mi risveglio!!!");
                 }catch (Exception e){
                     System.err.println("Errore nella wait dell'input/output");
-                    System.err.println("------------------------------------------------------");
+                    System.err.println("-----------------------------------");
                     e.printStackTrace();
                 }
             }
@@ -27,7 +29,7 @@ public class ClientInOutThread extends Thread{
                 System.out.println(event);
             }
             System.out.println("Punteggio: " + manager.getPoints() + "/" + manager.getLimitPoints());
-            System.out.println("Ti trovi nell'area di colore" + manager.getActualGridColor()+" in posizione " + manager.getMyPosition());
+            System.out.println("Ti trovi nell'area di colore " + manager.getActualGridColor()+" e in posizione " + manager.getMyPosition()+".");
             //se ci sono bombe, avviso l'utente
             if(manager.bombAvailable()) {
                 System.out.println("Hai a disposizione una bomba di colore " + manager.getBombString());
@@ -39,7 +41,7 @@ public class ClientInOutThread extends Thread{
     private void printChoices(){
         System.out.println("Inserisci operazione da voler eseguire");
         System.out.println("(M)uoviti");
-        System.out.println("(B)ombarda");
+        if(manager.bombAvailable()) System.out.println("(B)ombarda");
         String choice = s.nextLine();
         switch (choice.toUpperCase()){
             case "M":   //devo eseguire movimento
@@ -52,6 +54,8 @@ public class ClientInOutThread extends Thread{
                     Message message = new Message(MessageType.MOVE,gson.toJson(coord));
                     //e lo preparo all'invio
                     manager.setMessageToSend(message);
+                    //aggiorno mie coordinate
+                    manager.setMyPosition(coord);
                 }else{
                     //movimento non disponibile. richiedo input
                     System.out.println("Il movimento richiesto non è eseguibile");
@@ -59,8 +63,11 @@ public class ClientInOutThread extends Thread{
                 }
                 break;
             case "B":   //devo creare messaggio per bomba
-                //todo creare messaggio della bomba
-                break;
+                if(manager.bombAvailable()){
+                    //todo creare messaggio della bomba
+                    break;
+                }
+                //non ho bombe. mi comport come in caso di default
             default:
                 System.out.println("Input non valido\n");
                 printChoices();

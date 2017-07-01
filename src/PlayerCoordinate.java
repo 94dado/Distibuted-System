@@ -30,7 +30,7 @@ public class PlayerCoordinate{
     }
 
     public boolean isValidCoordinate(int sizeLimit){
-        return x > 0 && y > 0 && x < sizeLimit && y < sizeLimit;
+        return x >= 0 && y >= 0 && x < sizeLimit && y < sizeLimit;
     }
 
     @Override

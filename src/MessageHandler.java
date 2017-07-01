@@ -21,7 +21,6 @@ public class MessageHandler extends Thread{
             String messageString = inFromClient.readLine();
             //var per lo switch
             PlayerCoordinate coordinate;
-            DataOutputStream outToClient;
             //recupero il messaggio
             Message message = gson.fromJson(messageString,Message.class);
             switch (message.getType()){

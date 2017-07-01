@@ -54,16 +54,17 @@ public class PeerRequestSender {
     }
 
     //invia piu' messaggi in parallelo (attende e restituisce risposta)
-    public static Socket[] sendRequestToAllWaiting(ArrayList<Player> players, Player me, String message){
+    public static ArrayList<Socket> sendRequestToAllWaiting(ArrayList<Player> players, Player me, String message){
         ArrayList<Thread> threads = new ArrayList<>();
-        Socket[] sockets = new Socket[players.size()-1];
+        ArrayList<Socket> sockets = new ArrayList<>();
         //avvio thread
-        for(int i = 0; i < players.size(); i++){
-            Player p = players.get(i);
+        int i = 0;
+        for(Player p: players){
             if(!p.equals(me)){
                 SenderWithSocket thread = new SenderWithSocket(p,message,sockets,i);
                 threads.add(thread);
                 thread.start();
+                i++;
             }
         }
         //attendo che i thread abbiano finito
@@ -124,12 +125,12 @@ public class PeerRequestSender {
 
     //metodo per inviare un movimento agli altri player. Restituisce true se la mossa uccide un player
     public static boolean sendMove(ArrayList<Player> players, Player me, String message){
-        Socket[] sockets = sendRequestToAllWaiting(players, me, message);
+        ArrayList<Socket> sockets = sendRequestToAllWaiting(players, me, message);
         //numero di uccisioni eseguite (al massimo diventera' 1)
         int killed = 0;
         //controllo le risposte
-        for(int i = 0; i < sockets.length; i++){
-            Socket socket = sockets[i];
+        for(int i = 0; i < sockets.size(); i++){
+            Socket socket = sockets.get(i);
             try{
                 BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 //valuto risposta
@@ -141,6 +142,8 @@ public class PeerRequestSender {
                     //non essendoci piu' persone sulla stessa coordinata, esco dal ciclo
                     break;
                 }
+                //chiudo la socket
+                socket.close();
             }catch (Exception e){
                 System.err.println("Errore nella lettura della risposta di un thread dell'invio di un movimento");
                 System.err.println("---------------------------------------------------------------------------");
@@ -158,7 +161,6 @@ public class PeerRequestSender {
             outToServer.writeBytes(message + "\n");
             outToServer.flush();
             //chiudo socket
-            socket.close();
         }catch (Exception e){
             System.err.println("Errore nel tentativo di rispondere ad un messaggio");
             System.err.println("--------------------------------------------------");
@@ -181,6 +183,7 @@ class Sender extends Thread{
         Socket sock = PeerRequestSender.sendRequest(message,destination);
         try{
             sock.close();
+            System.out.println("Ho chiuso una socket, spero di non rompere nulla");
         }catch (Exception e){
             System.err.println("Errore nella chiusura della socket nel thread Sender");
             System.err.println("----------------------------------------------------");
@@ -190,10 +193,10 @@ class Sender extends Thread{
 }
 
 class SenderWithSocket extends Sender{
-    private Socket[] sockets;
+    private ArrayList<Socket> sockets;
     private int position;
 
-    public SenderWithSocket(Player destination, String message, Socket[] sockets, int position) {
+    public SenderWithSocket(Player destination, String message, ArrayList<Socket> sockets, int position) {
         super(destination, message);
         this.sockets = sockets;
         this.position = position;
@@ -201,6 +204,6 @@ class SenderWithSocket extends Sender{
 
     @Override
     public void run() {
-        sockets[position] = PeerRequestSender.sendRequest(message,destination);
+        sockets.add(position, PeerRequestSender.sendRequest(message,destination));
     }
 }
