@@ -55,7 +55,7 @@ public class MessageHandler extends Thread{
                     break;
                 case DIE:                       //sono morto. concludo la mia esistenza
                     socket.close();
-                    System.exit(0);
+                    GameplayManager.getIstance().isMatchFinished(true);
                     break;
                 case REMOVE_PLAYER:             //player morto. da togliere dalla lista
                     player = gson.fromJson(message.getJsonMessage(),Player.class);

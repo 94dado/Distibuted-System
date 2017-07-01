@@ -70,6 +70,10 @@ public class GameplayManager {
         this.myPosition = myPosition;
     }
 
+    public synchronized void isMatchFinished(boolean b) {
+        isMatchFinished = b;
+    }
+
     public synchronized boolean messageAvailable(){
         return messageToSend != null;
     }

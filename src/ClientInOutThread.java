@@ -14,9 +14,7 @@ public class ClientInOutThread extends Thread{
             if(manager.messageAvailable()){
                 //attendo che il messaggio venga inviato
                 try{
-                    System.out.println("attendo che il messaggio venga inviato");
                     wait();
-                    System.out.println("Mi risveglio!!!");
                 }catch (Exception e){
                     System.err.println("Errore nella wait dell'input/output");
                     System.err.println("-----------------------------------");
@@ -28,6 +26,8 @@ public class ClientInOutThread extends Thread{
             for(String event:events){
                 System.out.println(event);
             }
+            //se il match e' finito, chiudo il thread
+            if(manager.isMatchFinished())  break;
             System.out.println("Punteggio: " + manager.getPoints() + "/" + manager.getLimitPoints());
             System.out.println("Ti trovi nell'area di colore " + manager.getActualGridColor()+" e in posizione " + manager.getMyPosition()+".");
             //se ci sono bombe, avviso l'utente
