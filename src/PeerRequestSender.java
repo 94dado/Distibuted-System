@@ -103,7 +103,6 @@ public class PeerRequestSender {
                         spawned = gson.fromJson(answer, boolean.class);
                         //chiudo socket
                         socket.close();
-                        if (!spawned) break;
                     } catch (Exception e) {
                         System.err.println("Errore nel tentativo di comunicare coi peer per spawnare");
                         System.err.println("--------------------------------------------------------");
@@ -160,7 +159,6 @@ public class PeerRequestSender {
             //invio dati
             outToServer.writeBytes(message + "\n");
             outToServer.flush();
-            //chiudo socket
         }catch (Exception e){
             System.err.println("Errore nel tentativo di rispondere ad un messaggio");
             System.err.println("--------------------------------------------------");
@@ -185,11 +183,11 @@ class Sender extends Thread{
             sock.close();
             System.out.println("Ho chiuso una socket, spero di non rompere nulla");
         }catch (Exception e){
-            System.err.println("Errore nella chiusura della socket nel thread Sender");
-            System.err.println("----------------------------------------------------");
-            e.printStackTrace();
+        System.err.println("Errore nella chiusura della socket nel thread Sender");
+        System.err.println("----------------------------------------------------");
+        e.printStackTrace();
         }
-    }
+        }
 }
 
 class SenderWithSocket extends Sender{

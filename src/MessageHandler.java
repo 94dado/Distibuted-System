@@ -26,20 +26,18 @@ public class MessageHandler extends Thread{
             switch (message.getType()){
                 case TOKEN:                     //ho ricevuto il token
                     GameplayManager.getIstance().tokenReceived();
+                    socket.close();
                     break;
                 case ADD_PLAYER:                //nuovo player in partita
                     Player player = gson.fromJson(message.getJsonMessage(),Player.class);
                     GameplayManager.getIstance().addNewPlayer(player);
+                    socket.close();
                     break;
                 case CHECK_SPAWN:               //richiesto check delle coordinate per lo spawn
                     coordinate = gson.fromJson(message.getJsonMessage(), PlayerCoordinate.class);
                     boolean result = GameplayManager.getIstance().checkSpawnCoordinate(coordinate);
-                    DataOutputStream outToServer = new DataOutputStream(socket.getOutputStream());
-                    outToServer.writeBytes(gson.toJson(result)+"\n");
-                    outToServer.flush();
-                    outToServer.close();
-                    break;
-                case MOVE:                      //inviate nuove coordinate di un player
+                    PeerRequestSender.answer(socket,gson.toJson(result));
+                case MOVE:                      //ricevute nuove coordinate di un player
                     coordinate = gson.fromJson(message.getJsonMessage(), PlayerCoordinate.class);
                     Message m;
                     if(GameplayManager.getIstance().checkDie(coordinate)){
@@ -56,6 +54,7 @@ public class MessageHandler extends Thread{
                     }
                     break;
                 case DIE:                       //sono morto. concludo la mia esistenza
+                    socket.close();
                     System.exit(0);
                     break;
                 case REMOVE_PLAYER:             //player morto. da togliere dalla lista
