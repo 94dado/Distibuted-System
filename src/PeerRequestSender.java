@@ -100,7 +100,8 @@ public class PeerRequestSender {
                         BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                         //valuto risposta
                         String answer = reader.readLine();
-                        spawned = gson.fromJson(answer, boolean.class);
+                        //se fin'ora ho ottenuto ok, continuo ad aggiornare il booleano
+                        if(spawned) spawned = gson.fromJson(answer, boolean.class);
                         //chiudo socket
                         socket.close();
                     } catch (Exception e) {
@@ -181,7 +182,6 @@ class Sender extends Thread{
         Socket sock = PeerRequestSender.sendRequest(message,destination);
         try{
             sock.close();
-            System.out.println("Ho chiuso una socket, spero di non rompere nulla");
         }catch (Exception e){
         System.err.println("Errore nella chiusura della socket nel thread Sender");
         System.err.println("----------------------------------------------------");

@@ -37,6 +37,7 @@ public class MessageHandler extends Thread{
                     coordinate = gson.fromJson(message.getJsonMessage(), PlayerCoordinate.class);
                     boolean result = GameplayManager.getIstance().checkSpawnCoordinate(coordinate);
                     PeerRequestSender.answer(socket,gson.toJson(result));
+                    break;
                 case MOVE:                      //ricevute nuove coordinate di un player
                     coordinate = gson.fromJson(message.getJsonMessage(), PlayerCoordinate.class);
                     Message m;
