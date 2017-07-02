@@ -43,7 +43,7 @@ public class MessageHandler extends Thread{
                     Message m;
                     if(GameplayManager.getIstance().checkDie(coordinate)){
                         //sono morto
-                        GameplayManager.getIstance().addEvent("Sei stato mangiato. hai perso");
+                        GameplayManager.getIstance().addEvent("Sei stato mangiato. Hai perso");
                         m = new Message(MessageType.KILL_CONFIRMED, null);
                     }else{
                         m = new Message(MessageType.ACK, null);
