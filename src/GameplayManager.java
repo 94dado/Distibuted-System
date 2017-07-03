@@ -3,7 +3,6 @@ import com.google.gson.Gson;
 import javax.ws.rs.core.MediaType;
 import java.net.ServerSocket;
 import java.util.ArrayList;
-import java.util.Random;
 
 public class GameplayManager {
     //singleton
@@ -52,6 +51,10 @@ public class GameplayManager {
 
     public synchronized PlayerCoordinate getMyPosition() {
         return myPosition;
+    }
+
+    public synchronized Player getMe() {
+        return me;
     }
 
     public synchronized int getPoints() {
@@ -168,23 +171,24 @@ public class GameplayManager {
             //ho una mossa da mandare agli altri
             if(messageToSend.getType() == MessageType.BOMB){
                 //todo chiamare metodo per inviare bomba
-            }else{
-                boolean killed = PeerRequestSender.sendMove(match.getPlayers(),me,gson.toJson(messageToSend));
-                if(killed) {
-                    //ho fatto un punto
-                    points++;
-                    //controllo se la partita e' finita
-                    if(points == match.getPointLimit()){
-                        //ho vinto
-                        //TODO concludere la partita
-                    }
+            }else {
+                int killed = PeerRequestSender.sendMove(match.getPlayers(), me, gson.toJson(messageToSend));
+                points += killed;
+                //controllo se la partita e' finita
+                if (points >= match.getPointLimit()) {
+                    //ho vinto
+                    serverDie();
+                    eventBuffer.add("Complimenti, hai vinto la partita!");
+                    //invio il messaggio per morire
+                    sendDieMessage();
+
                 }
             }
-            messageToSend = null;
-            //sveglio il thread dell'input
-            synchronized (inOutThread){
-                inOutThread.notify();
-            }
+        }
+        messageToSend = null;
+        //sveglio il thread dell'input
+        synchronized (inOutThread){
+            inOutThread.notify();
         }
         //ora mando al prossimo il token, se esiste un prossimo
         if(match.getPlayers().size() > 1){
@@ -256,7 +260,7 @@ public class GameplayManager {
     public synchronized boolean checkDie(PlayerCoordinate coordinate) {
         if(myPosition.equals(coordinate)){
             //sono morto
-            Die();
+            serverDie();
             return true;
         }else{
             //sono ancora vivo
@@ -266,7 +270,7 @@ public class GameplayManager {
     }
 
     //metodo che esegue la morte
-    public synchronized void Die(){
+    public synchronized void serverDie(){
         try {
             String uri = url + "removePlayerFromMatch/" + match.getName() +"/"+me.getName();
             HTTPRequestCreator req = new HTTPRequestCreator("DELETE", MediaType.APPLICATION_JSON, uri);
@@ -287,5 +291,15 @@ public class GameplayManager {
         //invio richiesta a me stesso per esser sicuro di andare a terminare il server
         String message = gson.toJson(new Message(MessageType.DIE,null));
         PeerRequestSender.sendRequest(message,me);
+    }
+
+    //metodo che conclude la partita
+    public synchronized void setupEndOfMatch() {
+        //la partita deve concludersi. termino thread esistenti
+        isMatchFinished = true;
+        inOutThread.stopInOut();
+        listenerThread.stopListener();
+        //e vaffanculo
+        System.exit(0);
     }
 }

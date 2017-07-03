@@ -124,7 +124,7 @@ public class PeerRequestSender {
     }
 
     //metodo per inviare un movimento agli altri player. Restituisce true se la mossa uccide un player
-    public static boolean sendMove(ArrayList<Player> players, Player me, String message){
+    public static int sendMove(ArrayList<Player> players, Player me, String message){
         ArrayList<Socket> sockets = sendRequestToAllWaiting(players, me, message);
         //numero di uccisioni eseguite (al massimo diventera' 1)
         int killed = 0;
@@ -150,7 +150,7 @@ public class PeerRequestSender {
                 e.printStackTrace();
             }
         }
-        return killed == 1;
+        return killed;
     }
 
     //metodo che risponde ad una socket gia' aperta da altri client

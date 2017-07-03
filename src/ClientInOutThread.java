@@ -8,13 +8,15 @@ public class ClientInOutThread extends Thread{
     Gson gson = new Gson();
 
     @Override
-    public synchronized void run() {
+    public void run() {
         System.out.println("Partita iniziata\n");
         while(!manager.isMatchFinished()){
             if(manager.messageAvailable()){
                 //attendo che il messaggio venga inviato
                 try{
-                    wait();
+                    synchronized (this){
+                        wait();
+                    }
                 }catch (Exception e){
                     System.err.println("Errore nella wait dell'input/output");
                     System.err.println("-----------------------------------");
@@ -36,6 +38,15 @@ public class ClientInOutThread extends Thread{
             }
             printChoices();
         }
+    }
+
+    public void stopInOut(){
+        //stampo tutti gli eventi avvenuti prima di morire
+        String[] events = manager.getAllEvents();
+        for(String event:events){
+            System.out.println(event);
+        }
+        this.stop();
     }
 
     private void printChoices(){

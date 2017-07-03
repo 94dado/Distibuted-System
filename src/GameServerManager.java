@@ -116,7 +116,7 @@ public class GameServerManager {
         ArrayList<Player> players = selectedMatch.getPlayers();
         Message m = new Message(MessageType.REMOVE_PLAYER, new Gson().toJson(pl));
         String message = new Gson().toJson(m);
-        PeerRequestSender.sendRequestToAll(players,pl,message);
+        PeerRequestSender.sendRequestToAllWaiting(players,pl,message);
     }
 
     private synchronized void sendMessage(Player player, String message) {

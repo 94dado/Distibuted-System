@@ -21,6 +21,7 @@ public class MessageHandler extends Thread{
             String messageString = inFromClient.readLine();
             //var per lo switch
             PlayerCoordinate coordinate;
+            Message m;
             //recupero il messaggio
             Message message = gson.fromJson(messageString,Message.class);
             switch (message.getType()){
@@ -40,7 +41,6 @@ public class MessageHandler extends Thread{
                     break;
                 case MOVE:                      //ricevute nuove coordinate di un player
                     coordinate = gson.fromJson(message.getJsonMessage(), PlayerCoordinate.class);
-                    Message m;
                     if(GameplayManager.getIstance().checkDie(coordinate)){
                         //sono morto
                         GameplayManager.getIstance().addEvent("Sei stato mangiato. Hai perso");
@@ -56,7 +56,8 @@ public class MessageHandler extends Thread{
                     break;
                 case DIE:                       //sono morto. concludo la mia esistenza
                     socket.close();
-                    GameplayManager.getIstance().isMatchFinished(true);
+                    GameplayManager.getIstance().setupEndOfMatch();
+
                     break;
                 case REMOVE_PLAYER:             //player morto. da togliere dalla lista
                     player = gson.fromJson(message.getJsonMessage(),Player.class);

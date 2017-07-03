@@ -2,10 +2,10 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 public class ClientListenerThread extends Thread{
-
+    private ServerSocket serverSocket;
     @Override
     public void run() {
-        ServerSocket serverSocket = GameplayManager.getIstance().getServerSocket();
+        serverSocket = GameplayManager.getIstance().getServerSocket();
         try{
             //finchè la partita è in corso
             while(!GameplayManager.getIstance().isMatchFinished()){
@@ -15,12 +15,21 @@ public class ClientListenerThread extends Thread{
                 MessageHandler handler = new MessageHandler(sock);
                 handler.start();
             }
-            //partita finita. chiudo la socket
-            serverSocket.close();
         }catch (Exception e){
             System.err.println("Errore nel listener del client");
             System.err.println("------------------------------");
             e.printStackTrace();
         }
+    }
+
+    public void stopListener(){
+        try{
+            if(!serverSocket.isClosed())serverSocket.close();
+        }catch (Exception e){
+            System.err.println("Errore nella chiusura della socket server");
+            System.err.println("-----------------------------------------");
+            e.printStackTrace();
+        }
+        this.stop();
     }
 }
