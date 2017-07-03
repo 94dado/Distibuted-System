@@ -167,6 +167,7 @@ public class GameplayManager {
     //metodo che si occupa di far girare il token
     public synchronized void tokenReceived() {
         //System.out.println("I GOT THE POWER!");
+        boolean win = false;
         if(messageToSend != null){
             //ho una mossa da mandare agli altri
             if(messageToSend.getType() == MessageType.BOMB){
@@ -177,6 +178,7 @@ public class GameplayManager {
                 //controllo se la partita e' finita
                 if (points >= match.getPointLimit()) {
                     //ho vinto
+                    win = true;
                     serverDie();
                     eventBuffer.add("Complimenti, hai vinto la partita!");
                     //invio il messaggio per morire
@@ -190,8 +192,8 @@ public class GameplayManager {
         synchronized (inOutThread){
             inOutThread.notify();
         }
-        //ora mando al prossimo il token, se esiste un prossimo
-        if(match.getPlayers().size() > 1){
+        //ora mando al prossimo il token, se esiste un prossimo e se non ho vinto
+        if(!win && match.getPlayers().size() > 1){
             //c'e' qualcun'altro. Lo trovo
             Player next = nextPlayer();
             //creo il messaggio col token
