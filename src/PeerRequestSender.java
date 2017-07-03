@@ -137,7 +137,7 @@ public class PeerRequestSender {
                 String answer = reader.readLine();
                 Message m = new Gson().fromJson(answer,Message.class);
                 if(m.getType() == MessageType.KILL_CONFIRMED){  //hai ucciso il player
-                    GameplayManager.getIstance().addEvent("Hai mangiato " + players.get(i).getName() + "!");
+                    GameplayManager.getIstance().addEvent("Hai mangiato " + new Gson().fromJson(m.getJsonMessage(),Player.class).getName() + "!");
                     killed++;
                     //non essendoci piu' persone sulla stessa coordinata, esco dal ciclo
                     break;
