@@ -102,22 +102,22 @@ public class Match {
         return s.toString();
     }
 
-    public GridColors getColorOfPosition(PlayerCoordinate coord){
+    public GridColor getColorOfPosition(PlayerCoordinate coord){
         if(coord.getX() < dimension /2){
             if(coord.getY() < dimension / 2){
                 //alto sx
-                return GridColors.GREEN;
+                return GridColor.GREEN;
             }else{
                 //basso sx
-                return GridColors.BLUE;
+                return GridColor.BLUE;
             }
         }else{
             if(coord.getY() < dimension / 2){
                 //alto dx
-                return GridColors.RED;
+                return GridColor.RED;
             }else{
                 //basso dx
-                return GridColors.YELLOW;
+                return GridColor.YELLOW;
             }
         }
     }

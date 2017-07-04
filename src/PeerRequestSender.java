@@ -139,8 +139,6 @@ public class PeerRequestSender {
                 if(m.getType() == MessageType.KILL_CONFIRMED){  //hai ucciso il player
                     GameplayManager.getIstance().addEvent("Hai mangiato " + new Gson().fromJson(m.getJsonMessage(),Player.class).getName() + "!");
                     killed++;
-                    //non essendoci piu' persone sulla stessa coordinata, esco dal ciclo
-                    break;
                 }
                 //chiudo la socket
                 socket.close();
@@ -151,6 +149,32 @@ public class PeerRequestSender {
             }
         }
         return killed;
+    }
+
+    public static int sendBomb(ArrayList<Player> players, String message){
+        int killed = 0;
+        final int maxKill = 3;
+        Player me = GameplayManager.getIstance().getMe();
+        ArrayList<Socket> sockets = sendRequestToAllWaiting(players,null,message);
+        for(Socket s: sockets){
+            try{
+                BufferedReader reader = new BufferedReader(new InputStreamReader(s.getInputStream()));
+                Message m = new Gson().fromJson(reader.readLine(),Message.class);
+                if(m.getType() == MessageType.KILL_CONFIRMED){
+                    if(killed < maxKill) killed++;
+                    Player other = new Gson().fromJson(m.getJsonMessage(),Player.class);
+                    if(other.equals(me))
+                        GameplayManager.getIstance().addEvent("Ti sei suicidato");
+                    else
+                        GameplayManager.getIstance().addEvent("La tua bomba ha ucciso " + other.getName());
+                }
+            }catch (Exception e){
+                System.err.println("Errore lettura risposta all'esplosione");
+                System.err.println("--------------------------------------");
+                e.printStackTrace();
+            }
+        }
+        return  killed;
     }
 
     //metodo che risponde ad una socket gia' aperta da altri client

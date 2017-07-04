@@ -15,7 +15,7 @@ public class GameplayManager {
     private Player me;                                                      //informazioni sul mio giocatore
     private Gson gson = new Gson();
     private PlayerCoordinate myPosition;                                    //coordinate del giocatore
-    private ArrayList<GridColors> bombList = new ArrayList<>();             //lista delle bombe
+    private ArrayList<GridColor> bombList = new ArrayList<>();             //lista delle bombe
     private boolean isMatchFinished = false;                                //booleano che indica se la partita è finita per me
     private Message messageToSend;                                          //messaggio da inviare al ricevimento del token
     private int points;                                                     //punteggio del player
@@ -25,6 +25,7 @@ public class GameplayManager {
     //threads
     private ClientListenerThread listenerThread;
     private ClientInOutThread inOutThread;
+    private BombThread bombThread;
 
     private GameplayManager(ServerSocket serverSocket, Match match, Player me, String url) {
         this.serverSocket = serverSocket;
@@ -53,12 +54,20 @@ public class GameplayManager {
         return myPosition;
     }
 
+    public synchronized ArrayList<GridColor> getBombList() {
+        return bombList;
+    }
+
     public synchronized Player getMe() {
         return me;
     }
 
     public synchronized int getPoints() {
         return points;
+    }
+
+    public synchronized ArrayList<Player> getPlayersList(){
+        return match.getPlayers();
     }
 
     public synchronized int getLimitPoints() {
@@ -73,10 +82,6 @@ public class GameplayManager {
         this.myPosition = myPosition;
     }
 
-    public synchronized void isMatchFinished(boolean b) {
-        isMatchFinished = b;
-    }
-
     public synchronized boolean messageAvailable(){
         return messageToSend != null;
     }
@@ -84,6 +89,11 @@ public class GameplayManager {
     //aggiungo evento all'eventbuffer
     public synchronized void addEvent(String event){
         eventBuffer.add(event);
+    }
+
+    //aggiungo bomba al buffer delle bombe
+    public synchronized void addBomb(GridColor bomb){
+        bombList.add(bomb);
     }
 
     public synchronized String[] getAllEvents(){
@@ -115,6 +125,9 @@ public class GameplayManager {
         listenerThread.start();
         //creo thread per input/output
         inOutThread = new ClientInOutThread();
+        //creo e avvio thread per le bombe
+        bombThread = new BombThread();
+        bombThread.start();
         //comunico agli altri player il mio ingresso in partita
         String meJson = gson.toJson(me);
         Message m = new Message(MessageType.ADD_PLAYER,meJson);
@@ -133,6 +146,9 @@ public class GameplayManager {
         listenerThread.start();
         //creo thread per input/output
         inOutThread = new ClientInOutThread();
+        //creo e avvio thread per le bombe
+        bombThread = new BombThread();
+        bombThread.start();
         //spawno il player
         myPosition = PeerRequestSender.spawnPlayer(match.getPlayers(),me,match.getDimension());
         //avvio thread per input e output
@@ -170,8 +186,16 @@ public class GameplayManager {
         boolean win = false;
         if(messageToSend != null){
             //ho una mossa da mandare agli altri
-            if(messageToSend.getType() == MessageType.BOMB){
-                //todo chiamare metodo per inviare bomba
+            if(messageToSend.getType() == MessageType.BOMB_SPAWNED){
+                ThrowBombThread throwBomb = new ThrowBombThread(messageToSend);
+                throwBomb.start();
+                //attendo che il thread abbia avvisato della bomba gli altri
+                try{wait();}catch (Exception e){
+                    System.err.println("Errore nel wait per la bomba");
+                    System.err.println("----------------------------");
+                    e.printStackTrace();
+                }
+                //mi sono svegliato. proseguo
             }else {
                 int killed = PeerRequestSender.sendMove(match.getPlayers(), me, gson.toJson(messageToSend));
                 points += killed;
@@ -221,6 +245,13 @@ public class GameplayManager {
         }else return null;
     }
 
+    //metodo che rimuove una bomba dalla coda e la restituisce
+    public synchronized GridColor useBomb(){
+        if (bombAvailable())
+            return bombList.remove(0);
+        else return null;
+    }
+
     //metodo per controllare se un movimento e' lecito
     public synchronized PlayerCoordinate canMove(String choice){
         int x,y;
@@ -254,8 +285,19 @@ public class GameplayManager {
     }
 
     //restituisce il colore della griglia della posizione attuale
-    public synchronized GridColors getActualGridColor() {
+    public synchronized GridColor getActualGridColor() {
         return match.getColorOfPosition(myPosition);
+    }
+
+    public synchronized boolean checkBombDie(GridColor bomb){
+        if(bomb == getActualGridColor()){
+            //sono morto
+            serverDie();
+            return true;
+        }else{
+            //sono ancora vivo
+            return false;
+        }
     }
 
     //metodo per controllare se sono morto per via di una movimento avversario
@@ -301,7 +343,9 @@ public class GameplayManager {
         isMatchFinished = true;
         inOutThread.stopInOut();
         listenerThread.stopListener();
-        //e vaffanculo
+        bombThread.stopBomb();
+        //todo aggiungere altro?
+        //termino finalmente la mia esistenza
         System.exit(0);
     }
 }

@@ -1,4 +1,4 @@
-public enum GridColors {
+public enum GridColor {
     GREEN, RED, BLUE, YELLOW;
 
 

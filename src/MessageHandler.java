@@ -21,7 +21,7 @@ public class MessageHandler extends Thread{
             String messageString = inFromClient.readLine();
             //var per lo switch
             PlayerCoordinate coordinate;
-            Message m;
+            Message answer;
             //recupero il messaggio
             Message message = gson.fromJson(messageString,Message.class);
             switch (message.getType()){
@@ -44,13 +44,33 @@ public class MessageHandler extends Thread{
                     if(GameplayManager.getIstance().checkDie(coordinate)){
                         //sono morto
                         GameplayManager.getIstance().addEvent("Sei stato mangiato. Hai perso");
-                        m = new Message(MessageType.KILL_CONFIRMED, gson.toJson(GameplayManager.getIstance().getMe()));
+                        answer = new Message(MessageType.KILL_CONFIRMED, gson.toJson(GameplayManager.getIstance().getMe()));
                     }else{
-                        m = new Message(MessageType.ACK, null);
+                        answer = new Message(MessageType.ACK, null);
                     }
-                    PeerRequestSender.answer(socket,gson.toJson(m));
+                    PeerRequestSender.answer(socket,gson.toJson(answer));
                     //se sono morto, solo ora che tutti lo sanno e non mi hanno piu' nella lista dei player, mi invio il messaggio di morte
-                    if(m.getType() == MessageType.KILL_CONFIRMED){
+                    if(answer.getType() == MessageType.KILL_CONFIRMED){
+                        GameplayManager.getIstance().sendDieMessage();
+                    }
+                    break;
+                case BOMB_SPAWNED:              //bomba spawnata da un player
+                    //devo solo dire ok per far sapere che ho ricevuto il messaggio
+                    answer = new Message(MessageType.ACK,null);
+                    PeerRequestSender.answer(socket,gson.toJson(answer));
+                    break;
+                case BOMB_EXPLODED:             //bomba esplosa
+                    GridColor bombColor = gson.fromJson(message.getJsonMessage(),GridColor.class);
+                    if( GameplayManager.getIstance().checkBombDie(bombColor)){
+                        //colpito
+                        answer = new Message(MessageType.KILL_CONFIRMED, gson.toJson(GameplayManager.getIstance().getMe()));
+                    }else{
+                        //non colpito
+                        answer = new Message(MessageType.ACK,null);
+                    }
+                    PeerRequestSender.answer(socket,gson.toJson(answer));
+                    //se sono morto, solo ora che tutti lo sanno e non mi hanno piu' nella lista dei player, mi invio il messaggio di morte
+                    if(answer.getType() == MessageType.KILL_CONFIRMED){
                         GameplayManager.getIstance().sendDieMessage();
                     }
                     break;
@@ -65,7 +85,7 @@ public class MessageHandler extends Thread{
                     GameplayManager.getIstance().addEvent(player.getName() + " è uscito dalla partita.");
                     //rimuovo il player dalla lista
                     GameplayManager.getIstance().removePlayer(player);
-                    Message answer = new Message(MessageType.ACK,null);
+                    answer = new Message(MessageType.ACK,null);
                     PeerRequestSender.answer(socket,gson.toJson(answer));
             }
         }catch (Exception e){

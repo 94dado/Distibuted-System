@@ -54,6 +54,8 @@ public class ClientInOutThread extends Thread{
         System.out.println("(M)uoviti");
         if(manager.bombAvailable()) System.out.println("(B)ombarda");
         String choice = s.nextLine();
+        //variabili per lo switch
+        Message message;
         switch (choice.toUpperCase()){
             case "M":   //devo eseguire movimento
                 System.out.println("Dove ci si vuole spostare?");
@@ -62,7 +64,7 @@ public class ClientInOutThread extends Thread{
                 PlayerCoordinate coord = manager.canMove(choice.toUpperCase());
                 if(coord.isValidCoordinate(manager.getMatchDimension())){
                     //movimento possibile. Creo messaggio
-                    Message message = new Message(MessageType.MOVE,gson.toJson(coord));
+                    message = new Message(MessageType.MOVE,gson.toJson(coord));
                     //e lo preparo all'invio
                     manager.setMessageToSend(message);
                     //aggiorno mie coordinate
@@ -75,7 +77,12 @@ public class ClientInOutThread extends Thread{
                 break;
             case "B":   //devo creare messaggio per bomba
                 if(manager.bombAvailable()){
-                    //todo creare messaggio della bomba
+                    //recupero la bomba
+                    GridColor bomb = manager.useBomb();
+                    //creo il messaggio
+                    message = new Message(MessageType.BOMB_SPAWNED,gson.toJson(bomb));
+                    //e lo salvo
+                    manager.setMessageToSend(message);
                     break;
                 }
                 //non ho bombe. mi comport come in caso di default
