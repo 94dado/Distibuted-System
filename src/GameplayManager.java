@@ -20,6 +20,7 @@ public class GameplayManager {
     private Message messageToSend;                                          //messaggio da inviare al ricevimento del token
     private int points;                                                     //punteggio del player
     private ArrayList<String> eventBuffer = new ArrayList<>();              //buffer degli eventi da stampare e mostrare all'utente
+    private boolean win = false;
 
 
     //threads
@@ -94,6 +95,19 @@ public class GameplayManager {
     //aggiungo bomba al buffer delle bombe
     public synchronized void addBomb(GridColor bomb){
         bombList.add(bomb);
+    }
+
+    public synchronized void addPoints(int points){
+        this.points += points;
+        //controllo se la partita e' finita
+        if (this.points >= match.getPointLimit()) {
+            //ho vinto
+            win = true;
+            serverDie();
+            eventBuffer.add("Complimenti, hai vinto la partita!");
+            //invio il messaggio per morire
+            sendDieMessage();
+        }
     }
 
     public synchronized String[] getAllEvents(){
@@ -183,7 +197,6 @@ public class GameplayManager {
     //metodo che si occupa di far girare il token
     public synchronized void tokenReceived() {
         //System.out.println("I GOT THE POWER!");
-        boolean win = false;
         if(messageToSend != null){
             //ho una mossa da mandare agli altri
             if(messageToSend.getType() == MessageType.BOMB_SPAWNED){
@@ -198,17 +211,7 @@ public class GameplayManager {
                 //mi sono svegliato. proseguo
             }else {
                 int killed = PeerRequestSender.sendMove(match.getPlayers(), me, gson.toJson(messageToSend));
-                points += killed;
-                //controllo se la partita e' finita
-                if (points >= match.getPointLimit()) {
-                    //ho vinto
-                    win = true;
-                    serverDie();
-                    eventBuffer.add("Complimenti, hai vinto la partita!");
-                    //invio il messaggio per morire
-                    sendDieMessage();
-
-                }
+                addPoints(killed);
             }
         }
         messageToSend = null;

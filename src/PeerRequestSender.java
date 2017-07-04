@@ -86,17 +86,21 @@ public class PeerRequestSender {
 
     //metodo che esegue chiamate a tutti i peer per poter correttamente entrare in partita
     public static PlayerCoordinate spawnPlayer(ArrayList<Player> players, Player me, int dimension){
+        return spawnPlayer(players,me,dimension, new ArrayList<>());
+    }
+
+    public static PlayerCoordinate spawnPlayer(ArrayList<Player> players, Player me, int dimension, ArrayList<PlayerCoordinate> oldAttempts){
         boolean spawned = true;
         Gson gson = new Gson();
         PlayerCoordinate coordinate;
-        ArrayList<PlayerCoordinate> oldAttempts = new ArrayList<>();
         //finche' non riesco a spawnare
         do{
             //creo coordinate e le metto in un messaggio
             coordinate = spawnCoordinate(dimension, oldAttempts);
             oldAttempts.add(coordinate);
             Message toSend = new Message(MessageType.CHECK_SPAWN,gson.toJson(coordinate));
-            for (Player destination : players) {
+            for (int i = 0; i < players.size(); i++) {
+                Player destination = players.get(i);
                 if (!destination.equals(me)) {
                     try {
                         Socket socket = PeerRequestSender.sendRequest(gson.toJson(toSend),destination);
@@ -109,9 +113,11 @@ public class PeerRequestSender {
                         //chiudo socket
                         socket.close();
                     } catch (Exception e) {
-                        System.err.println("Errore nel tentativo di comunicare coi peer per spawnare");
-                        System.err.println("--------------------------------------------------------");
-                        e.printStackTrace();
+                        //qualcosa non va. ritento la comunicazione tra un attimo
+                        try{Thread.sleep(100);}catch (Exception err) {
+                            System.err.println("inception nello sleep");
+                        }
+                        spawnPlayer(players, me, dimension, oldAttempts);
                     }
                 }
             }
@@ -172,6 +178,7 @@ public class PeerRequestSender {
                     else
                         GameplayManager.getIstance().addEvent("La tua bomba ha ucciso " + other.getName());
                 }
+                s.close();
             }catch (Exception e){
                 System.err.println("Errore lettura risposta all'esplosione");
                 System.err.println("--------------------------------------");
@@ -189,9 +196,13 @@ public class PeerRequestSender {
             outToServer.writeBytes(message + "\n");
             outToServer.flush();
         }catch (Exception e){
-            System.err.println("Errore nel tentativo di rispondere ad un messaggio");
-            System.err.println("--------------------------------------------------");
-            e.printStackTrace();
+            //se non ci riesco, l'altro client e' semplicemente gia' morto.
+            if(!socket.isClosed())
+                try{
+                socket.close();
+                }catch (Exception err){
+                    System.err.println("Inception");
+                }
         }
     }
 

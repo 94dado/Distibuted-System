@@ -52,5 +52,11 @@ public class ThrowBombThread extends Thread {
         //ora posso far esplodere la bomba
         message = new Message(MessageType.BOMB_EXPLODED, message.getJsonMessage());
         int killed = PeerRequestSender.sendBomb(GameplayManager.getIstance().getPlayersList(), gson.toJson(message));
+        GameplayManager.getIstance().addPoints(killed);
+        //stampo avvenimenti
+        String[] events = GameplayManager.getIstance().getAllEvents();
+        for(String event:events){
+            System.out.println(event);
+        }
     }
 }
