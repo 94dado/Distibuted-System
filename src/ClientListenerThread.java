@@ -16,9 +16,8 @@ public class ClientListenerThread extends Thread{
                 handler.start();
             }
         }catch (Exception e){
-            System.err.println("Errore nel listener del client");
-            System.err.println("------------------------------");
-            e.printStackTrace();
+            //succede solo col suicidio della bomba. ripristino il thread
+            run();
         }
     }
 
