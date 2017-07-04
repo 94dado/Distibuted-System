@@ -131,7 +131,7 @@ public class GameplayManager {
         //comunico agli altri player il mio ingresso in partita
         String meJson = gson.toJson(me);
         Message m = new Message(MessageType.ADD_PLAYER,meJson);
-        PeerRequestSender.sendRequestToAll(match.getPlayers(),me,gson.toJson(m));
+        PeerRequestSender.addNewPlayer(match.getPlayers(),me,gson.toJson(m));
         //cerco di far spawnare il player
         myPosition = PeerRequestSender.spawnPlayer(match.getPlayers(),me,match.getDimension());
         //avvio thread per input e output
@@ -223,8 +223,7 @@ public class GameplayManager {
             //creo il messaggio col token
             Message tokenMessage = new Message(MessageType.TOKEN,null);
             //e glielo mando
-            PeerRequestSender.sendRequest(gson.toJson(tokenMessage),next);
-
+            PeerRequestSender.sendToken(next,gson.toJson(tokenMessage));
         }
     }
 
@@ -334,7 +333,7 @@ public class GameplayManager {
     public synchronized void sendDieMessage() {
         //invio richiesta a me stesso per esser sicuro di andare a terminare il server
         String message = gson.toJson(new Message(MessageType.DIE,null));
-        PeerRequestSender.sendRequest(message,me);
+        PeerRequestSender.suicide(message, me);
     }
 
     //metodo che conclude la partita

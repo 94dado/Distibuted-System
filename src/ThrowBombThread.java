@@ -21,7 +21,7 @@ public class ThrowBombThread extends Thread {
         Gson gson = new Gson();
         boolean ok = true;
         //avviso i player della bomba
-        ArrayList<Socket> sockets = PeerRequestSender.sendRequestToAllWaiting(GameplayManager.getIstance().getPlayersList(),null, gson.toJson(message));
+        ArrayList<Socket> sockets = PeerRequestSender.spawnBomb(GameplayManager.getIstance().getPlayersList(), gson.toJson(message));
         for(Socket socket:sockets){
             try{
                 //attendo risposta

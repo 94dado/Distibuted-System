@@ -29,7 +29,7 @@ public class PeerRequestSender {
     }
 
     //invia piu' messaggi in parallelo (ignoro risposta)
-    public static void sendRequestToAll(ArrayList<Player> players, Player me, String message) {
+    private static void sendRequestToAll(ArrayList<Player> players, Player me, String message) {
         ArrayList<Sender> threads = new ArrayList<>();
         //invio il messaggio a tutti
         for (Player destination : players) {
@@ -54,14 +54,14 @@ public class PeerRequestSender {
     }
 
     //invia piu' messaggi in parallelo (attende e restituisce risposta)
-    public static ArrayList<Socket> sendRequestToAllWaiting(ArrayList<Player> players, Player me, String message){
+    private static ArrayList<Socket> sendRequestToAllWaiting(ArrayList<Player> players, Player me, String message){
         ArrayList<Thread> threads = new ArrayList<>();
         ArrayList<Socket> sockets = new ArrayList<>();
         //avvio thread
         int i = 0;
         for(Player p: players){
             if(!p.equals(me)){
-                SenderWithSocket thread = new SenderWithSocket(p,message,sockets,i);
+                SenderWithSocket thread = new SenderWithSocket(p,message,sockets);
                 threads.add(thread);
                 thread.start();
                 i++;
@@ -78,6 +78,10 @@ public class PeerRequestSender {
             }
         }
         return sockets;
+    }
+
+    public static void sendToken(Player next, String message){
+        PeerRequestSender.sendRequest(message,next);
     }
 
     //metodo che esegue chiamate a tutti i peer per poter correttamente entrare in partita
@@ -190,6 +194,22 @@ public class PeerRequestSender {
             e.printStackTrace();
         }
     }
+
+    public static void addNewPlayer(ArrayList<Player> players, Player me, String message) {
+        sendRequestToAll(players,me,message);
+    }
+
+    public static void suicide(String message, Player me) {
+        sendRequest(message,me);
+    }
+
+    public static void sendRemovePlayer(ArrayList<Player> players, Player pl, String message) {
+        sendRequestToAll(players, pl, message);
+    }
+
+    public static ArrayList<Socket> spawnBomb(ArrayList<Player> playersList, String s) {
+        return sendRequestToAllWaiting(playersList, null, s);
+    }
 }
 
 class Sender extends Thread{
@@ -216,16 +236,14 @@ class Sender extends Thread{
 
 class SenderWithSocket extends Sender{
     private ArrayList<Socket> sockets;
-    private int position;
 
-    public SenderWithSocket(Player destination, String message, ArrayList<Socket> sockets, int position) {
+    public SenderWithSocket(Player destination, String message, ArrayList<Socket> sockets) {
         super(destination, message);
         this.sockets = sockets;
-        this.position = position;
     }
 
     @Override
     public void run() {
-        sockets.add(position, PeerRequestSender.sendRequest(message,destination));
+        sockets.add(PeerRequestSender.sendRequest(message,destination));
     }
 }
