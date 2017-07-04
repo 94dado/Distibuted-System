@@ -11,8 +11,8 @@ public class BombThread extends Thread{
     AccelerometerSimulator simulator;
     Thread simulatorThread;
     int second = 1000;
-    private final double alfa = 0.4;
-    private final double th = 6;
+    private final double alfa = 0.2;
+    private final double th = 3;
 
     public BombThread(){
         buffer = new BombBuffer();
