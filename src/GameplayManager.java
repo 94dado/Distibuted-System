@@ -150,7 +150,6 @@ public class GameplayManager {
         myPosition = PeerRequestSender.spawnPlayer(match.getPlayers(),me,match.getDimension());
         //avvio thread per input e output
         inOutThread.start();
-        //TODO aggiungere altra roba forse?
     }
 
     //metodo che avvia una nuova partita
@@ -167,7 +166,6 @@ public class GameplayManager {
         myPosition = PeerRequestSender.spawnPlayer(match.getPlayers(),me,match.getDimension());
         //avvio thread per input e output
         inOutThread.start();
-        //TODO aggiungere altra roba forse?
     }
 
     //metodo che aggiunge un nuovo player in partita
@@ -192,7 +190,6 @@ public class GameplayManager {
         }
         if(pos > -1) players.remove(pos);
     }
-
 
     //metodo che si occupa di far girare il token
     public synchronized void tokenReceived() {
@@ -291,6 +288,7 @@ public class GameplayManager {
         return match.getColorOfPosition(myPosition);
     }
 
+    //controlla se sono morto per via dell'esplosione di una bomba
     public synchronized boolean checkBombDie(GridColor bomb){
         if(bomb == getActualGridColor()){
             //sono morto
@@ -346,7 +344,6 @@ public class GameplayManager {
         inOutThread.stopInOut();
         listenerThread.stopListener();
         bombThread.stopBomb();
-        //todo aggiungere altro?
         //termino finalmente la mia esistenza
         System.exit(0);
     }
