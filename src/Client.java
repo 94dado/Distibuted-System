@@ -159,8 +159,6 @@ public class Client {
                     }
                 }catch (Exception e) {
                     System.err.println("Match non trovato");
-                    System.err.println("-----------------");
-                    e.printStackTrace();
                     break;
                 }
             case "E":

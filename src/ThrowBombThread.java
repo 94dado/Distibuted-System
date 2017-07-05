@@ -5,9 +5,7 @@ import java.io.InputStreamReader;
 import java.net.Socket;
 import java.util.ArrayList;
 
-/**
- * Created by dado_ on 04/07/2017.
- */
+
 public class ThrowBombThread extends Thread {
     private Message message;
     private final int seconds = 5000;
@@ -39,6 +37,13 @@ public class ThrowBombThread extends Thread {
         if(!ok){
             System.err.println("Non ho ricevuto ack da tutti per lo spawn della bomba... :/");
         }
+        //avviso che lo spawn e' riuscito
+        GameplayManager.getIstance().addEvent("Bomba lanciata correttamente!");
+        //svuoto buffer eventi per avvisare della bomba
+        for(String event: GameplayManager.getIstance().getAllEvents()){
+            System.out.println(event);
+        }
+
         //ora tutti sanno che la bomba e' stata spawnata. risveglio thread del token
         synchronized (GameplayManager.getIstance()){
             GameplayManager.getIstance().notify();

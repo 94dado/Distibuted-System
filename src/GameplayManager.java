@@ -110,6 +110,7 @@ public class GameplayManager {
         }
     }
 
+    //restituisce tutti gli eventi successi da stampare all'utente
     public synchronized String[] getAllEvents(){
         String[] events = new String[eventBuffer.size()];
         events = eventBuffer.toArray(events);

@@ -58,6 +58,11 @@ public class MessageHandler extends Thread{
                     //devo solo dire ok per far sapere che ho ricevuto il messaggio
                     answer = new Message(MessageType.ACK,null);
                     PeerRequestSender.answer(socket,gson.toJson(answer));
+                    //avviso player dello spawn della bomba
+                    GameplayManager.getIstance().addEvent("Un giocatore ha lanciato una bomba!");
+                    for(String event: GameplayManager.getIstance().getAllEvents()){
+                        System.out.println(event);
+                    }
                     break;
                 case BOMB_EXPLODED:             //bomba esplosa
                     GridColor bombColor = gson.fromJson(message.getJsonMessage(),GridColor.class);
