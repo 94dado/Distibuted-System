@@ -29,9 +29,11 @@ public class ThrowBombThread extends Thread {
                 socket.close();
                 ok = ok && answer.getType() == MessageType.ACK;
             }catch (Exception e){
-                System.err.println("Errore nello spawn della bomba");
-                System.err.println("------------------------------");
-                e.printStackTrace();
+                System.err.println("Errore nella lettura delle risposta allo spawn della bomba");
+                //stato incoerente. MEglio terminare
+                GameplayManager.getIstance().serverDie();
+                GameplayManager.getIstance().sendDieMessage();
+                break;
             }
         }
         if(!ok){
@@ -51,8 +53,10 @@ public class ThrowBombThread extends Thread {
         //attendo 5 secondi per l'esplosione
         try{Thread.sleep(seconds);}catch (Exception e){
             System.err.println("Errore nella sleep della bomba");
-            System.err.println("------------------------------");
-            e.printStackTrace();
+            //no sense. Comunque non posso piu' far esploderla, quindi meglio terminare la partita
+            GameplayManager.getIstance().serverDie();
+            GameplayManager.getIstance().sendDieMessage();
+            return;
         }
         //ora posso far esplodere la bomba
         message = new Message(MessageType.BOMB_EXPLODED, message.getJsonMessage());

@@ -19,8 +19,9 @@ public class ClientInOutThread extends Thread{
                     }
                 }catch (Exception e){
                     System.err.println("Errore nella wait dell'input/output");
-                    System.err.println("-----------------------------------");
-                    e.printStackTrace();
+                    //questo e' un problemone. Termino la mia esistenza
+                    GameplayManager.getIstance().serverDie();
+                    GameplayManager.getIstance().sendDieMessage();
                 }
             }
             //stampo tutti gli eventi avvenuti

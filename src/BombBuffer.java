@@ -4,9 +4,6 @@ import Simulator.Measurement;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by dado_ on 04/07/2017.
- */
 public class BombBuffer implements Buffer<Measurement> {
     ArrayList<Measurement> measurements = new ArrayList<>();
 

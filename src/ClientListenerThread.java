@@ -16,7 +16,7 @@ public class ClientListenerThread extends Thread{
                 handler.start();
             }
         }catch (Exception e){
-            //succede solo col suicidio della bomba. ripristino il thread
+            //succede col suicidio della bomba. ripristino il thread. altri eventuali casi saranno da valutare
             run();
         }
     }
@@ -26,8 +26,7 @@ public class ClientListenerThread extends Thread{
             if(!serverSocket.isClosed())serverSocket.close();
         }catch (Exception e){
             System.err.println("Errore nella chiusura della socket server");
-            System.err.println("-----------------------------------------");
-            e.printStackTrace();
+            //se sono qui, sto comunque gia' morendo. proseguo e basta
         }
         this.stop();
     }

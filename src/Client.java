@@ -35,8 +35,7 @@ public class Client {
             startApplication();
         }catch (Exception e){
             System.err.println("Errore nell'apertura della socket di ascolto del client!");
-            System.err.println("--------------------------------------------------------");
-            e.printStackTrace();
+            //qua ci si fa poco. Termino la mia esistenza, semplicemente
         }
     }
 
@@ -86,9 +85,8 @@ public class Client {
                         System.out.println(i+ ": "+listOfMatch[i]);
                     }
                 }catch (Exception e){
-                    System.err.println("Errore di connesione. Chiudo ...");
-                    System.err.println("--------------------------------");
-                    e.printStackTrace();
+                    System.err.println("Impossibile stampare lista match");
+                    //qualcosa sul server e' andato storto. Termino il programma
                     return false;
                 }
                 break;
@@ -121,12 +119,12 @@ public class Client {
                         return false;
                     }else{
                         //match non creato
-                        System.out.println("Errore nella creazione della partita. Cambiare nome e riprovare");
-                        System.err.println("---------------------------------------------------------------");
+                        System.out.println("Partita con stesso nome esistente. Impossibile crearla");
                     }
                 }catch (Exception e){
-                    System.err.println("Errore di connessione.");
-                    e.printStackTrace();
+                    System.err.println("Errore di comunicazione con il server");
+                    //il server non risponde. Termino programma
+                    return false;
                 }
                 break;
             case "C":
@@ -159,6 +157,7 @@ public class Client {
                     }
                 }catch (Exception e) {
                     System.err.println("Match non trovato");
+                    //non e' un problema. Proseguo
                     break;
                 }
             case "E":
@@ -175,6 +174,7 @@ public class Client {
         try{
             ip = InetAddress.getLocalHost().getHostAddress();
         }catch (Exception e){
+            //that hurts
             ip = "";
         }
         return ip;

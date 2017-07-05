@@ -32,8 +32,8 @@ public class BombThread extends Thread{
                 Thread.sleep(second);
             }catch (Exception e){
                 System.err.println("Errore nello sleep del thread del sensore");
-                System.err.println("-----------------------------------------");
-                e.printStackTrace();
+                //a questo giro lo sleep e' fallito. Riprovo, semplicemente
+                continue;
             }
             measurements = buffer.readAllAndClean();
             avg = average(measurements);

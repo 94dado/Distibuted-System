@@ -97,6 +97,7 @@ public class GameplayManager {
         bombList.add(bomb);
     }
 
+    //aggiunge punti ai punti totalizzati
     public synchronized void addPoints(int points){
         this.points += points;
         //controllo se la partita e' finita
@@ -203,8 +204,9 @@ public class GameplayManager {
                 //attendo che il thread abbia avvisato della bomba gli altri
                 try{wait();}catch (Exception e){
                     System.err.println("Errore nel wait per la bomba");
-                    System.err.println("----------------------------");
-                    e.printStackTrace();
+                    //non scopriro' mai se e' spawnata la bomba. Termino la mia esistenza
+                    serverDie();
+                    sendDieMessage();
                 }
                 //mi sono svegliato. proseguo
             }else {
@@ -325,8 +327,8 @@ public class GameplayManager {
             }
         }catch (Exception e){
             System.err.println("Errore nel tentativo di comunicare la mia morte al server");
-            System.err.println("---------------------------------------------------------");
-            e.printStackTrace();
+            //in tal caso, non posso comunicare la mia morte. Termino malamente
+            setupEndOfMatch();
         }
     }
 

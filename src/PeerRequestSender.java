@@ -181,8 +181,10 @@ public class PeerRequestSender {
                 s.close();
             }catch (Exception e){
                 System.err.println("Errore lettura risposta all'esplosione");
-                System.err.println("--------------------------------------");
-                e.printStackTrace();
+                //non so se l'altro ha ricevuto bene la bomba. Nel dubbio, termino
+                GameplayManager.getIstance().serverDie();
+                GameplayManager.getIstance().sendDieMessage();
+                break;
             }
         }
         return  killed;
@@ -201,7 +203,7 @@ public class PeerRequestSender {
                 try{
                 socket.close();
                 }catch (Exception err){
-                    System.err.println("Inception");
+                    //a sto punto lui e' sparito. Non mi faccio ulteriori problemi
                 }
         }
     }
@@ -239,8 +241,7 @@ class Sender extends Thread{
             sock.close();
         }catch (Exception e){
         System.err.println("Errore nella chiusura della socket nel thread Sender");
-        System.err.println("----------------------------------------------------");
-        e.printStackTrace();
+        //se non ci riesco, la socket e' gia' stata chiusa. Non mi faccio problemi, anche se non dovrebbe mai succedere
         }
     }
 }

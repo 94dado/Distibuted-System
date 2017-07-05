@@ -95,8 +95,9 @@ public class MessageHandler extends Thread{
             }
         }catch (Exception e){
             System.err.println("Errore nell'elaborazione del messaggio ricevuto");
-            System.err.println("-----------------------------------------------");
-            e.printStackTrace();
+            //ignorando completamente che messaggio fosse, conviene suicidarmi
+            GameplayManager.getIstance().serverDie();
+            GameplayManager.getIstance().sendDieMessage();
         }
     }
 }

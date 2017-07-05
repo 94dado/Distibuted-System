@@ -118,21 +118,4 @@ public class GameServerManager {
         String message = new Gson().toJson(m);
         PeerRequestSender.sendRemovePlayer(players,pl,message);
     }
-
-    private synchronized void sendMessage(Player player, String message) {
-        try{
-            Socket s = new Socket(player.getAddress(),player.getPort());
-            DataOutputStream outToServer = new DataOutputStream(s.getOutputStream());
-            //invio dati
-            outToServer.writeBytes(message + "\n");
-            outToServer.flush();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(s.getInputStream()));
-            //valuto risposta
-            String answer = reader.readLine();
-            //me ne frego della risposta, mi basta che ci sia
-        }catch (Exception e){
-            System.err.println("Come lo gestisco questo errore?");
-            e.printStackTrace();
-        }
-    }
 }
