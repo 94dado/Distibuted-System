@@ -16,14 +16,14 @@ public class ClientListenerThread extends Thread{
                 handler.start();
             }
         }catch (Exception e){
-            //succede col suicidio della bomba. ripristino il thread. altri eventuali casi saranno da valutare
+            //succede col suicidio della bomba. ripristino il thread, che terminera' da solo. altri eventuali casi saranno da valutare
             run();
         }
     }
 
     public void stopListener(){
         try{
-            if(!serverSocket.isClosed())serverSocket.close();
+            if(!serverSocket.isClosed()) serverSocket.close();
         }catch (Exception e){
             System.err.println("Errore nella chiusura della socket server");
             //se sono qui, sto comunque gia' morendo. proseguo e basta

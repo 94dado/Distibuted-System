@@ -22,8 +22,8 @@ public class PeerRequestSender {
             return socket;
         }catch (Exception e){
             System.err.println("Errore nel tentativo di comunicare con un altro client");
-            System.err.println("------------------------------------------------------");
-            e.printStackTrace();
+            //il messaggio poteva essere importante. Termino il processo, quasi sicuramente in uno stato unsafe
+            System.exit(-1);
             return null;
         }
     }
@@ -47,8 +47,8 @@ public class PeerRequestSender {
                 send.join();
             }catch (Exception e){
                 System.err.println("Errore nell'attesa che i thread inviassero un messaggio a più destinatari");
-                System.err.println("-------------------------------------------------------------------------");
-                e.printStackTrace();
+                //sono in uno stato instabile. Meglio terminare malamente
+                System.exit(-1);
             }
         }
     }
@@ -58,13 +58,11 @@ public class PeerRequestSender {
         ArrayList<Thread> threads = new ArrayList<>();
         ArrayList<Socket> sockets = new ArrayList<>();
         //avvio thread
-        int i = 0;
         for(Player p: players){
             if(!p.equals(me)){
                 SenderWithSocket thread = new SenderWithSocket(p,message,sockets);
                 threads.add(thread);
                 thread.start();
-                i++;
             }
         }
         //attendo che i thread abbiano finito
@@ -73,8 +71,8 @@ public class PeerRequestSender {
                 t.join();
             }catch (Exception e){
                 System.err.println("Errore nell'attesa che un thread finisse di inviare dati");
-                System.err.println("--------------------------------------------------------");
-                e.printStackTrace();
+                //sono in uno stato instabile. Meglio terminare malamente
+                System.exit(-1);
             }
         }
         return sockets;
@@ -86,38 +84,32 @@ public class PeerRequestSender {
 
     //metodo che esegue chiamate a tutti i peer per poter correttamente entrare in partita
     public static PlayerCoordinate spawnPlayer(ArrayList<Player> players, Player me, int dimension){
-        return spawnPlayer(players,me,dimension, new ArrayList<>());
-    }
-
-    public static PlayerCoordinate spawnPlayer(ArrayList<Player> players, Player me, int dimension, ArrayList<PlayerCoordinate> oldAttempts){
         boolean spawned = true;
         Gson gson = new Gson();
         PlayerCoordinate coordinate;
+        ArrayList<PlayerCoordinate> oldAttempts = new ArrayList<>();
         //finche' non riesco a spawnare
         do{
             //creo coordinate e le metto in un messaggio
             coordinate = spawnCoordinate(dimension, oldAttempts);
             oldAttempts.add(coordinate);
             Message toSend = new Message(MessageType.CHECK_SPAWN,gson.toJson(coordinate));
-            for (int i = 0; i < players.size(); i++) {
-                Player destination = players.get(i);
+            for (Player destination : players) {
                 if (!destination.equals(me)) {
                     try {
-                        Socket socket = PeerRequestSender.sendRequest(gson.toJson(toSend),destination);
+                        Socket socket = PeerRequestSender.sendRequest(gson.toJson(toSend), destination);
                         //attendo risposta
                         BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                         //valuto risposta
                         String answer = reader.readLine();
                         //se fin'ora ho ottenuto ok, continuo ad aggiornare il booleano
-                        if(spawned) spawned = gson.fromJson(answer, boolean.class);
+                        if (spawned) spawned = gson.fromJson(answer, boolean.class);
                         //chiudo socket
                         socket.close();
                     } catch (Exception e) {
-                        //qualcosa non va. ritento la comunicazione tra un attimo
-                        try{Thread.sleep(100);}catch (Exception err) {
-                            System.err.println("inception nello sleep");
-                        }
-                        spawnPlayer(players, me, dimension, oldAttempts);
+                        //non sono riuscito a spawnare. Restituisco null
+                        System.err.println("Errore di comunicazione nello spawn del player.");
+                        return null;
                     }
                 }
             }
@@ -154,8 +146,9 @@ public class PeerRequestSender {
                 socket.close();
             }catch (Exception e){
                 System.err.println("Errore nella lettura della risposta di un thread dell'invio di un movimento");
-                System.err.println("---------------------------------------------------------------------------");
-                e.printStackTrace();
+                //ho fallito l'invio di un movimento a qualcuno. Potendo aver ucciso qualcun'altro, non posso inviare di nuovo. Termino esistenza
+                GameplayManager.getIstance().serverDie();
+                GameplayManager.getIstance().sendDieMessage();
             }
         }
         return killed;

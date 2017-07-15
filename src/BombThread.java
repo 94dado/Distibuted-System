@@ -3,9 +3,6 @@ import Simulator.Measurement;
 
 import java.util.List;
 
-/**
- * Created by dado_ on 04/07/2017.
- */
 public class BombThread extends Thread{
     BombBuffer buffer;
     AccelerometerSimulator simulator;

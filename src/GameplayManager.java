@@ -150,6 +150,12 @@ public class GameplayManager {
         PeerRequestSender.addNewPlayer(match.getPlayers(),me,gson.toJson(m));
         //cerco di far spawnare il player
         myPosition = PeerRequestSender.spawnPlayer(match.getPlayers(),me,match.getDimension());
+        if(myPosition == null){
+            //lo spawn non è andato a buon fine. Mi scollego dalla partita
+            serverDie();
+            sendDieMessage();
+            return;
+        }
         //avvio thread per input e output
         inOutThread.start();
     }

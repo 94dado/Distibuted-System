@@ -19,11 +19,11 @@ public class Client {
         String ip;
         int port;
         System.out.println("Progetto Sistemi Distribuiti 2016/2017 - Davide Quadrelli\n");
-        //todo decommentare a progetto finito le prossime righe
-//        System.out.println("Inserisci indirizzo del server:");
-//        String serverAddress = s.nextLine();
-//        port = getInt("Inserisci porta del server:");
-//        url = "http://"+serverAddress+":"+port+"/gameServer/";
+
+        System.out.println("Inserisci indirizzo del server:");
+        String serverAddress = s.nextLine();
+        port = getInt("Inserisci porta del server:");
+        url = "http://"+serverAddress+":"+port+"/gameServer/";
         System.out.println("Inserisci nome utente:");
         String name = s.nextLine();
         //avvio server per le comunicazioni fra client

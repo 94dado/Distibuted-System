@@ -3,9 +3,9 @@ import com.google.gson.Gson;
 import java.util.Scanner;
 
 public class ClientInOutThread extends Thread{
-    Scanner s = new Scanner(System.in);
-    GameplayManager manager = GameplayManager.getIstance();
-    Gson gson = new Gson();
+    private Scanner s = new Scanner(System.in);
+    private GameplayManager manager = GameplayManager.getIstance();
+    private Gson gson = new Gson();
 
     @Override
     public void run() {
@@ -20,8 +20,8 @@ public class ClientInOutThread extends Thread{
                 }catch (Exception e){
                     System.err.println("Errore nella wait dell'input/output");
                     //questo e' un problemone. Termino la mia esistenza
-                    GameplayManager.getIstance().serverDie();
-                    GameplayManager.getIstance().sendDieMessage();
+                    manager.serverDie();
+                    manager.sendDieMessage();
                 }
             }
             //stampo tutti gli eventi avvenuti
